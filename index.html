@@ -26,7 +26,7 @@
 <input type="date" id="tanggal">
 <input id="produk" placeholder="Produk">
 
-<h3>🔧 GRINDING</h3>
+<h3>GRINDING</h3>
 <input id="psa" placeholder="Ukuran PSA / Partikel (contoh: 30–50)">
 <input id="mesh" placeholder="Mesh">
 <input id="mix_a" placeholder="Mix A">
@@ -35,7 +35,7 @@
 <input id="silo_b" placeholder="Silo B">
 <textarea id="catatan_grinding" placeholder="Catatan Grinding..."></textarea>
 
-<h3>📦 PREPARATION</h3>
+<h3>PREPARATION</h3>
 <input type="number" id="pulp203" placeholder="Pulp Tangki 203 (set)">
 <input type="number" id="pulp204" placeholder="Pulp Tangki 204 (set)">
 <input type="number" id="pulp205" placeholder="Pulp Tangki 205 (set)">
@@ -47,16 +47,16 @@
 <input id="recycle" placeholder="Recycle (mis. 3 set × 20 kg = 60 kg)">
 <textarea id="catatan_preparation" placeholder="Catatan Preparation..."></textarea>
 
-<h3>📦 FINISH GOOD</h3>
+<h3>FINISH GOOD</h3>
 <input type="number" id="mr" placeholder="Jumlah Mother Roll (roll)">
 <input type="number" id="fg_berat" placeholder="Total Berat (kg)">
 <textarea id="catatan_finish" placeholder="Catatan Finish Good..."></textarea>
 
-<h3>🛠 CYLINDER</h3>
+<h3>CYLINDER</h3>
 <input id="pisau" placeholder="Pisau Nomor">
 <textarea id="catatan_cylinder" placeholder="Catatan Cylinder..."></textarea>
 
-<h3>✂️ SLITTING</h3>
+<h3>SLITTING</h3>
 <input type="number" id="slit_mr" placeholder="Jumlah MR yang dipotong">
 <input type="number" id="reject_produksi" placeholder="Bobin Reject Produksi">
 <input type="number" id="reject_ncp" placeholder="Bobin Reject NCP">
@@ -96,7 +96,7 @@ function generate() {
   if (g("produk")) hasil += `Produk: ${g("produk")}\n\n`;
 
   // Grinding
-  hasil += `🔧 GRINDING\n`;
+  hasil += `GRINDING\n`;
   if (g("psa")) hasil += `- Ukuran PSA / Partikel: ${g("psa")} µm\n`;
   if (g("mesh")) hasil += `- Mesh: ${g("mesh")}\n`;
   if (g("mix_a")) hasil += `- Mix A: ${g("mix_a")}\n`;
@@ -107,7 +107,7 @@ function generate() {
   hasil += `\n`;
 
   // Preparation
-  hasil += `📦 PREPARATION\n`;
+  hasil += `PREPARATION\n`;
   if (g("pulp203")) hasil += `- Pulp Tangki 203: ${g("pulp203")} set\n`;
   if (g("pulp204")) hasil += `- Pulp Tangki 204: ${g("pulp204")} set\n`;
   if (g("pulp205")) hasil += `- Pulp Tangki 205: ${g("pulp205")} set\n`;
@@ -121,20 +121,20 @@ function generate() {
   hasil += `\n`;
 
   // Finish Good
-  hasil += `📦 FINISH GOOD\n`;
+  hasil += `FINISH GOOD\n`;
   if (g("mr")) hasil += `- Jumlah Mother Roll: ${g("mr")} roll\n`;
   if (g("fg_berat")) hasil += `- Total Berat: ${g("fg_berat")} kg\n`;
   if (g("catatan_finish")) hasil += buatCatatan(g("catatan_finish")) + "\n";
   hasil += `\n`;
 
   // Cylinder
-  hasil += `🛠 CYLINDER\n`;
+  hasil += `CYLINDER\n`;
   if (g("pisau")) hasil += `- Pisau Nomor: ${g("pisau")}\n`;
   if (g("catatan_cylinder")) hasil += buatCatatan(g("catatan_cylinder")) + "\n";
   hasil += `\n`;
 
   // Slitting
-  hasil += `✂️ SLITTING\n`;
+  hasil += `SLITTING\n`;
   if (bobin_mr) hasil += `- Slitting potong: ${bobin_mr} MR = ${total_bobin} bobin\n`;
   if (reject) hasil += `- Bobin Reject Produksi: ${reject} bobin, total ${reject * 15} kg\n`;
   if (reject_ncp) hasil += `- Bobin Reject NCP: ${reject_ncp} bobin, total ${reject_ncp * 15} kg\n`;
@@ -145,7 +145,7 @@ function generate() {
 
   // OEE
   if (!isNaN(oee)) {
-    hasil += `📈 OEE\n`;
+    hasil += `OEE\n`;
     hasil += `- Hasil OEE: ${oee.toFixed(2)}%\n`;
   }
 
