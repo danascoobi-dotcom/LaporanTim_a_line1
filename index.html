@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Laporan Shift A</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; background: #f2f2f2; max-width: 600px; margin: auto; }
-    input, textarea, button {
+    body { font-family: Arial, sans-serif; padding: 16px; background: #f2f2f2; max-width: 700px; margin: auto; }
+    input, textarea, button, select {
       width: 100%; padding: 10px; margin-top: 10px; font-size: 14px;
       border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;
     }
@@ -18,6 +18,14 @@
       background: #fff; padding: 12px; border-radius: 5px; border: 1px solid #ccc;
       white-space: pre-wrap; font-family: monospace;
     }
+    #listLaporan ul { list-style: none; padding-left: 10px; }
+    #listLaporan li { margin-bottom: 10px; }
+    #notif {
+      margin-top: 10px; padding: 8px; border-radius: 5px; font-size: 14px;
+      display: none;
+    }
+    #notif.sukses { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    #notif.gagal { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
   </style>
 </head>
 <body>
@@ -63,10 +71,19 @@
 <input type="number" id="total_bobin_manual" placeholder="Total Bobin Keseluruhan (manual)">
 <textarea id="catatan_slitting" placeholder="Catatan Slitting..."></textarea>
 
-<button id="generateBtn" onclick="generate()">Tampilkan Laporan</button>
+<button id="generateBtn" onclick="generate()">Tampilkan Laporan (Auto Save)</button>
+<div id="notif"></div>
 <pre id="output"></pre>
 <button id="waBtn" onclick="kirimWhatsApp()">Kirim ke WhatsApp</button>
 <button id="gptBtn" onclick="kirimKeChatGPT()">Kirim ke ChatGPT</button>
+
+<hr>
+<div id="listLaporan" style="margin-top:20px; padding:10px; background:#fff; border-radius:8px;">
+  <h3>📋 Data Laporan Realtime</h3>
+  <label>Filter tanggal:</label>
+  <input type="date" id="filterTanggal" onchange="tampilkanLaporan()">
+  <ul id="laporanList"></ul>
+</div>
 
 <script>
 function g(id) { return document.getElementById(id).value.trim(); }
@@ -77,81 +94,141 @@ function buatCatatan(teks) {
   return teks.split("\n").map(l => "- " + l).join("\n");
 }
 
-function generate() {
-  const totalBobinManual = n("total_bobin_manual");
-  const totalBobinKg = totalBobinManual * 15;
-
-  const bobin_mr = n("slit_mr");
-  const total_bobin = bobin_mr * 10;
-  const reject = n("reject_produksi");
-  const reject_ncp = n("reject_ncp");
-  const bobin_oke = total_bobin - reject - reject_ncp;
-  const bobin_oke_kg = bobin_oke * 15;
-
-  const oee = (bobin_oke_kg / (10.2 * 1.09 * 0.22 * 480)) * 100;
-
-  let hasil = "";
-  hasil += `LAPORAN SHIFT A\n`;
-  if (g("tanggal")) hasil += `Tanggal: ${g("tanggal")}\n`;
-  if (g("produk")) hasil += `Produk: ${g("produk")}\n\n`;
-
-  // Grinding
-  hasil += `GRINDING\n`;
-  if (g("psa")) hasil += `- Ukuran PSA / Partikel: ${g("psa")} µm\n`;
-  if (g("mesh")) hasil += `- Mesh: ${g("mesh")}\n`;
-  if (g("mix_a")) hasil += `- Mix A: ${g("mix_a")}\n`;
-  if (g("mix_b")) hasil += `- Mix B: ${g("mix_b")}\n`;
-  if (g("silo_a")) hasil += `- Silo A: ${g("silo_a")}\n`;
-  if (g("silo_b")) hasil += `- Silo B: ${g("silo_b")}\n`;
-  if (g("catatan_grinding")) hasil += buatCatatan(g("catatan_grinding")) + "\n";
-  hasil += `\n`;
-
-  // Preparation
-  hasil += `PREPARATION\n`;
-  if (g("pulp203")) hasil += `- Pulp Tangki 203: ${g("pulp203")} set\n`;
-  if (g("pulp204")) hasil += `- Pulp Tangki 204: ${g("pulp204")} set\n`;
-  if (g("pulp205")) hasil += `- Pulp Tangki 205: ${g("pulp205")} set\n`;
-  if (g("adhesive_standby")) hasil += `- Adhesive Standby: ${g("adhesive_standby")} set\n`;
-  if (g("adhesive_sisa")) hasil += `- Adhesive Sisa di Tangki: ${g("adhesive_sisa")} set\n`;
-  if (g("flavor_standby")) hasil += `- Flavor Standby: ${g("flavor_standby")} set\n`;
-  if (g("flavor_sisa")) hasil += `- Flavor Sisa di Tangki: ${g("flavor_sisa")} set\n`;
-  if (g("kalsium")) hasil += `- Kalsium Standby: ${g("kalsium")} set\n`;
-  if (g("recycle")) hasil += `- Recycle: ${g("recycle")}\n`;
-  if (g("catatan_preparation")) hasil += buatCatatan(g("catatan_preparation")) + "\n";
-  hasil += `\n`;
-
-  // Finish Good
-  hasil += `FINISH GOOD\n`;
-  if (g("mr")) hasil += `- Jumlah Mother Roll: ${g("mr")} roll\n`;
-  if (g("fg_berat")) hasil += `- Total Berat: ${g("fg_berat")} kg\n`;
-  if (g("catatan_finish")) hasil += buatCatatan(g("catatan_finish")) + "\n";
-  hasil += `\n`;
-
-  // Cylinder
-  hasil += `CYLINDER\n`;
-  if (g("pisau")) hasil += `- Pisau Nomor: ${g("pisau")}\n`;
-  if (g("catatan_cylinder")) hasil += buatCatatan(g("catatan_cylinder")) + "\n";
-  hasil += `\n`;
-
-  // Slitting
-  hasil += `SLITTING\n`;
-  if (bobin_mr) hasil += `- Slitting potong: ${bobin_mr} MR = ${total_bobin} bobin\n`;
-  if (reject) hasil += `- Bobin Reject Produksi: ${reject} bobin, total ${reject * 15} kg\n`;
-  if (reject_ncp) hasil += `- Bobin Reject NCP: ${reject_ncp} bobin, total ${reject_ncp * 15} kg\n`;
-  if (bobin_mr) hasil += `- Bobin yang oke: ${bobin_oke} bobin, total ${bobin_oke_kg} kg\n`;
-  if (totalBobinManual) hasil += `- Total Bobin Keseluruhan: ${totalBobinManual} bobin (${totalBobinKg} kg)\n`;
-  if (g("catatan_slitting")) hasil += buatCatatan(g("catatan_slitting")) + "\n";
-  hasil += `\n`;
-
-  // OEE
-  if (!isNaN(oee)) {
-    hasil += `OEE\n`;
-    hasil += `- Hasil OEE: ${oee.toFixed(2)}%\n`;
-  }
-
-  document.getElementById("output").textContent = hasil;
+function showNotif(pesan, sukses = true) {
+  const notif = document.getElementById("notif");
+  notif.textContent = pesan;
+  notif.className = sukses ? "sukses" : "gagal";
+  notif.style.display = "block";
+  setTimeout(() => notif.style.display = "none", 3000);
 }
+</script>
 
+<!-- 🔹 Firebase + Logic -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+  import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCReZ1Hs1p63Sq6DWODvwbKCgpVPUzVKQA",
+    authDomain: "laporanharian-d689c.firebaseapp.com",
+    databaseURL: "https://laporanharian-d689c-default-rtdb.firebaseio.com",
+    projectId: "laporanharian-d689c",
+    storageBucket: "laporanharian-d689c.appspot.com",
+    messagingSenderId: "161606001787",
+    appId: "1:161606001787:web:a2550a1abf208ce188aede",
+    measurementId: "G-E9SL4RT4TB"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // 🔹 Generate laporan + auto save
+  window.generate = function() {
+    const totalBobinManual = n("total_bobin_manual");
+    const totalBobinKg = totalBobinManual * 15;
+
+    const bobin_mr = n("slit_mr");
+    const total_bobin = bobin_mr * 10;
+    const reject = n("reject_produksi");
+    const reject_ncp = n("reject_ncp");
+    const bobin_oke = total_bobin - reject - reject_ncp;
+    const bobin_oke_kg = bobin_oke * 15;
+
+    const oee = (bobin_oke_kg / (10.2 * 1.09 * 0.22 * 480)) * 100;
+
+    let hasil = "";
+    hasil += `LAPORAN SHIFT A\n`;
+    if (g("tanggal")) hasil += `Tanggal: ${g("tanggal")}\n`;
+    if (g("produk")) hasil += `Produk: ${g("produk")}\n\n`;
+
+    hasil += `GRINDING\n`;
+    if (g("psa")) hasil += `- Ukuran PSA / Partikel: ${g("psa")} µm\n`;
+    if (g("mesh")) hasil += `- Mesh: ${g("mesh")}\n`;
+    if (g("mix_a")) hasil += `- Mix A: ${g("mix_a")}\n`;
+    if (g("mix_b")) hasil += `- Mix B: ${g("mix_b")}\n`;
+    if (g("silo_a")) hasil += `- Silo A: ${g("silo_a")}\n`;
+    if (g("silo_b")) hasil += `- Silo B: ${g("silo_b")}\n`;
+    if (g("catatan_grinding")) hasil += g("catatan_grinding") + "\n\n";
+
+    hasil += `PREPARATION\n`;
+    if (g("pulp203")) hasil += `- Pulp Tangki 203: ${g("pulp203")} set\n`;
+    if (g("pulp204")) hasil += `- Pulp Tangki 204: ${g("pulp204")} set\n`;
+    if (g("pulp205")) hasil += `- Pulp Tangki 205: ${g("pulp205")} set\n`;
+    if (g("adhesive_standby")) hasil += `- Adhesive Standby: ${g("adhesive_standby")} set\n`;
+    if (g("adhesive_sisa")) hasil += `- Adhesive Sisa di Tangki: ${g("adhesive_sisa")} set\n`;
+    if (g("flavor_standby")) hasil += `- Flavor Standby: ${g("flavor_standby")} set\n`;
+    if (g("flavor_sisa")) hasil += `- Flavor Sisa di Tangki: ${g("flavor_sisa")} set\n`;
+    if (g("kalsium")) hasil += `- Kalsium Standby: ${g("kalsium")} set\n`;
+    if (g("recycle")) hasil += `- Recycle: ${g("recycle")}\n`;
+    if (g("catatan_preparation")) hasil += g("catatan_preparation") + "\n\n";
+
+    hasil += `FINISH GOOD\n`;
+    if (g("mr")) hasil += `- Jumlah Mother Roll: ${g("mr")} roll\n`;
+    if (g("fg_berat")) hasil += `- Total Berat: ${g("fg_berat")} kg\n`;
+    if (g("catatan_finish")) hasil += g("catatan_finish") + "\n\n`;
+
+    hasil += `CYLINDER\n`;
+    if (g("pisau")) hasil += `- Pisau Nomor: ${g("pisau")}\n`;
+    if (g("catatan_cylinder")) hasil += g("catatan_cylinder") + "\n\n`;
+
+    hasil += `SLITTING\n`;
+    if (bobin_mr) hasil += `- Slitting potong: ${bobin_mr} MR = ${total_bobin} bobin\n`;
+    if (reject) hasil += `- Bobin Reject Produksi: ${reject} bobin, total ${reject * 15} kg\n`;
+    if (reject_ncp) hasil += `- Bobin Reject NCP: ${reject_ncp} bobin, total ${reject_ncp * 15} kg\n`;
+    if (bobin_mr) hasil += `- Bobin yang oke: ${bobin_oke} bobin, total ${bobin_oke_kg} kg\n`;
+    if (totalBobinManual) hasil += `- Total Bobin Keseluruhan: ${totalBobinManual} bobin (${totalBobinKg} kg)\n`;
+    if (g("catatan_slitting")) hasil += g("catatan_slitting") + "\n\n`;
+
+    if (!isNaN(oee)) {
+      hasil += `OEE\n- Hasil OEE: ${oee.toFixed(2)}%\n`;
+    }
+
+    // tampilkan
+    document.getElementById("output").textContent = hasil;
+
+    // simpan ke firebase
+    if (hasil.trim() !== "") {
+      const tanggal = g("tanggal") || "tanpa_tanggal";
+      const laporanRef = ref(db, "laporan/" + tanggal);
+      const newLaporan = push(laporanRef);
+      set(newLaporan, {
+        laporan: hasil,
+        waktu: new Date().toISOString()
+      }).then(() => showNotif("✅ Laporan berhasil disimpan!", true))
+        .catch(() => showNotif("❌ Gagal menyimpan laporan!", false));
+    }
+  };
+
+  // 🔹 tampilkan laporan realtime dengan filter tanggal
+  window.tampilkanLaporan = function() {
+    const filterTanggal = document.getElementById("filterTanggal").value;
+    const laporanRef = ref(db, "laporan");
+    onValue(laporanRef, (snapshot) => {
+      const data = snapshot.val();
+      const list = document.getElementById("laporanList");
+      list.innerHTML = "";
+
+      if (data) {
+        Object.keys(data).forEach(tanggal => {
+          if (filterTanggal && tanggal !== filterTanggal) return; // filter
+          const perTanggal = data[tanggal];
+          const liTanggal = document.createElement("li");
+          liTanggal.innerHTML = `<b>${tanggal}</b><ul>`;
+          Object.values(perTanggal).forEach(item => {
+            liTanggal.innerHTML += `<li><pre>${item.laporan}</pre><small>${item.waktu}</small></li>`;
+          });
+          liTanggal.innerHTML += "</ul>";
+          list.appendChild(liTanggal);
+        });
+      } else {
+        list.innerHTML = "<li>Belum ada laporan tersimpan.</li>";
+      }
+    });
+  };
+  tampilkanLaporan(); // pertama kali load
+</script>
+
+<script>
 function kirimWhatsApp() {
   const isi = document.getElementById("output").textContent;
   if (isi) {
