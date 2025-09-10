@@ -3,14 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laporan Shift</title>
+  <title>Laporan Produksi</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; background: #f2f2f2; max-width: 700px; margin: auto; }
+    body { font-family: Arial, sans-serif; padding: 0; margin: 0; background: #f2f2f2; }
+    .tabs { display: flex; background: #007bff; }
+    .tabBtn {
+      flex: 1; padding: 12px; border: none; background: #007bff; color: white;
+      font-weight: bold; cursor: pointer;
+    }
+    .tabBtn.active { background: #0056b3; }
+    .tabContent { display: none; padding: 16px; max-width: 800px; margin: auto; }
     input, textarea, button, select {
-      width: 100%; padding: 10px; margin-top: 10px; font-size: 14px;
+      width: 100%; padding: 10px; margin-top: 8px; font-size: 14px;
       border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;
     }
-    button { font-weight: bold; border: none; color: white; cursor: pointer; margin-top: 5px; }
+    button { font-weight: bold; border: none; color: white; cursor: pointer; }
     #generateBtn { background: #28a745; }
     #waBtn { background: #25d366; }
     #copyBtn { background: #007bff; }
@@ -18,257 +25,192 @@
       background: #fff; padding: 12px; border-radius: 5px; border: 1px solid #ccc;
       white-space: pre-wrap; font-family: monospace;
     }
-    #listLaporan ul { list-style: none; padding-left: 10px; }
-    #listLaporan li { margin-bottom: 10px; }
     #notif {
-      margin-top: 10px; padding: 8px; border-radius: 5px; font-size: 14px;
-      display: none;
+      margin-top: 10px; padding: 8px; border-radius: 5px; font-size: 14px; display: none;
     }
     #notif.sukses { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     #notif.gagal { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    details { background: #fff; margin: 8px 0; padding: 8px; border-radius: 5px; border: 1px solid #ddd; }
+    summary { font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<h2>Input Laporan Produksi</h2>
-<input type="date" id="tanggal">
+<!-- 🔹 Tabs -->
+<div class="tabs">
+  <button class="tabBtn active" onclick="openTab('shiftTab', this)">Laporan Shift</button>
+  <button class="tabBtn" onclick="openTab('line2Tab', this)">Laporan Line 2 & 3</button>
+  <button class="tabBtn" onclick="openTab('monitorTab', this)">Monitoring</button>
+</div>
 
-<label for="shift">Pilih Shift:</label>
-<select id="shiftSelect" onchange="updateShiftInput()">
-  <option value="">-- Pilih Shift --</option>
-  <option value="A">Shift A</option>
-  <option value="B">Shift B</option>
-  <option value="C">Shift C</option>
-  <option value="lain">Lainnya (isi manual)</option>
-</select>
-<input id="shift" placeholder="Isi shift manual jika pilih 'Lainnya'">
+<!-- 🔹 TAB 1: Shift -->
+<div id="shiftTab" class="tabContent" style="display:block;">
+  <h2>Laporan Shift</h2>
+  <input type="date" id="tanggal">
+  <label>Pilih Shift:</label>
+  <select id="shiftSelect" onchange="updateShiftInput()">
+    <option value="">-- Pilih Shift --</option>
+    <option value="A">Shift A</option>
+    <option value="B">Shift B</option>
+    <option value="C">Shift C</option>
+    <option value="lain">Lainnya (manual)</option>
+  </select>
+  <input id="shift" placeholder="Isi shift manual">
 
-<input id="produk" placeholder="Produk">
+  <input id="produk" placeholder="Produk">
+  <textarea id="catatan_grinding" placeholder="Catatan Grinding"></textarea>
+  <textarea id="catatan_preparation" placeholder="Catatan Preparation"></textarea>
+  <textarea id="catatan_finish" placeholder="Catatan Finish Good"></textarea>
 
-<h3>GRINDING</h3>
-<input id="psa" placeholder="Ukuran PSA / Partikel">
-<input id="mesh" placeholder="Mesh">
-<input id="mix_a" placeholder="Mix A">
-<input id="mix_b" placeholder="Mix B">
-<input id="silo_a" placeholder="Silo A">
-<input id="silo_b" placeholder="Silo B">
-<textarea id="catatan_grinding" placeholder="Catatan Grinding..."></textarea>
+  <button id="generateBtn" onclick="generateShift()">Tampilkan & Simpan</button>
+  <div id="notif"></div>
+  <pre id="output"></pre>
+  <button id="waBtn" onclick="kirimWhatsApp()">Kirim WhatsApp</button>
+  <button id="copyBtn" onclick="salinLaporan()">Salin</button>
 
-<h3>PREPARATION</h3>
-<input type="number" id="pulp203" placeholder="Pulp Tangki 203 (set)">
-<input type="number" id="pulp204" placeholder="Pulp Tangki 204 (set)">
-<input type="number" id="pulp205" placeholder="Pulp Tangki 205 (set)">
-<input type="number" id="adhesive_standby" placeholder="Adhesive Standby (set)">
-<input type="number" id="adhesive_sisa" placeholder="Adhesive Sisa (set)">
-<input type="number" id="flavor_standby" placeholder="Flavor Standby (set)">
-<input type="number" id="flavor_sisa" placeholder="Flavor Sisa (set)">
-<input type="number" id="kalsium" placeholder="Kalsium Standby (set)">
-<input id="recycle" placeholder="Recycle (mis. 3 set × 20 kg = 60 kg)">
-<textarea id="catatan_preparation" placeholder="Catatan Preparation..."></textarea>
-
-<h3>FINISH GOOD</h3>
-<input type="number" id="mr" placeholder="Jumlah Mother Roll (roll)">
-<input type="number" id="fg_berat" placeholder="Total Berat (kg)">
-<textarea id="catatan_finish" placeholder="Catatan Finish Good..."></textarea>
-
-<h3>CYLINDER</h3>
-<input id="pisau" placeholder="Pisau Nomor">
-<textarea id="catatan_cylinder" placeholder="Catatan Cylinder..."></textarea>
-
-<h3>SLITTING</h3>
-<input type="number" id="slit_mr" placeholder="Jumlah MR yang dipotong">
-<input type="number" id="reject_produksi" placeholder="Bobin Reject Produksi">
-<input type="number" id="reject_ncp" placeholder="Bobin Reject NCP">
-<input type="number" id="total_bobin_manual" placeholder="Total Bobin Manual">
-<textarea id="catatan_slitting" placeholder="Catatan Slitting..."></textarea>
-
-<button id="generateBtn" onclick="generate()">Tampilkan Laporan (Auto Save)</button>
-<div id="notif"></div>
-<pre id="output"></pre>
-<button id="waBtn" onclick="kirimWhatsApp()">Kirim ke WhatsApp</button>
-<button id="copyBtn" onclick="salinLaporan()">Salin Laporan</button>
-
-<hr>
-<div id="listLaporan" style="margin-top:20px; padding:10px; background:#fff; border-radius:8px;">
-  <h3>📋 Data Laporan Realtime</h3>
-
+  <h3>📋 Data Tersimpan</h3>
   <label>Filter tanggal:</label>
-  <input type="date" id="filterTanggal" onchange="tampilkanLaporan()">
-
+  <input type="date" id="filterTanggal" onchange="tampilkanLaporanShift()">
   <label>Filter shift:</label>
-  <select id="filterShift" onchange="tampilkanLaporan()">
+  <select id="filterShift" onchange="tampilkanLaporanShift()">
     <option value="">Semua</option>
     <option value="A">Shift A</option>
     <option value="B">Shift B</option>
     <option value="C">Shift C</option>
   </select>
-
   <ul id="laporanList"></ul>
 </div>
 
+<!-- 🔹 TAB 2: Line 2 & 3 -->
+<div id="line2Tab" class="tabContent">
+  <h2>Laporan Line 2 & 3</h2>
+  <input type="date" id="tanggal2">
+  <input id="shift2" placeholder="Shift">
+  <input id="produk2" placeholder="Produk">
+  <textarea id="catatan2" placeholder="Catatan Line 2"></textarea>
+  <textarea id="catatan3" placeholder="Catatan Line 3"></textarea>
+
+  <button onclick="generateLine23()">Tampilkan & Simpan</button>
+  <pre id="output2"></pre>
+</div>
+
+<!-- 🔹 TAB 3: Monitoring -->
+<div id="monitorTab" class="tabContent">
+  <h2>Monitoring Semua Data</h2>
+  <label>Filter tanggal:</label>
+  <input type="date" id="monitorTanggal" onchange="renderMonitor()">
+  <div id="monitorOutput"></div>
+</div>
+
 <script>
-function g(id) { return document.getElementById(id).value.trim(); }
-function n(id) { return parseInt(g(id)) || 0; }
-
-function showNotif(pesan, sukses = true) {
-  const notif = document.getElementById("notif");
-  notif.textContent = pesan;
-  notif.className = sukses ? "sukses" : "gagal";
-  notif.style.display = "block";
-  setTimeout(() => notif.style.display = "none", 3000);
+function openTab(tabId, elm) {
+  document.querySelectorAll(".tabContent").forEach(tab => tab.style.display="none");
+  document.getElementById(tabId).style.display="block";
+  document.querySelectorAll(".tabBtn").forEach(btn => btn.classList.remove("active"));
+  elm.classList.add("active");
 }
-
-function updateShiftInput() {
-  const select = document.getElementById("shiftSelect");
-  const input = document.getElementById("shift");
-  if (select.value === "lain") {
-    input.style.display = "block";
-    input.value = "";
-  } else {
-    input.style.display = "none";
-    input.value = select.value;
-  }
+function g(id){return document.getElementById(id).value.trim();}
+function showNotif(pesan, sukses=true){
+  const n=document.getElementById("notif");
+  n.textContent=pesan; n.className=sukses?"sukses":"gagal"; n.style.display="block";
+  setTimeout(()=>n.style.display="none",3000);
 }
-
-function kirimWhatsApp() {
-  const isi = document.getElementById("output").textContent;
-  if (isi) {
-    const url = "https://wa.me/?text=" + encodeURIComponent(isi);
-    window.open(url, "_blank");
-  }
+function updateShiftInput(){
+  const s=document.getElementById("shiftSelect"), i=document.getElementById("shift");
+  if(s.value==="lain"){i.style.display="block"; i.value="";} else {i.style.display="none"; i.value=s.value;}
 }
-
-function salinLaporan() {
-  const isi = document.getElementById("output").textContent;
-  if (isi) {
-    navigator.clipboard.writeText(isi).then(() => {
-      showNotif("📋 Laporan disalin ke clipboard", true);
-    });
-  }
-}
+function kirimWhatsApp(){const isi=document.getElementById("output").textContent;if(isi)window.open("https://wa.me/?text="+encodeURIComponent(isi),"_blank");}
+function salinLaporan(){const isi=document.getElementById("output").textContent;if(isi)navigator.clipboard.writeText(isi).then(()=>showNotif("📋 Laporan disalin",true));}
 </script>
 
 <!-- 🔹 Firebase -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-  import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCReZ1Hs1p63Sq6DWODvwbKCgpVPUzVKQA",
-    authDomain: "laporanharian-d689c.firebaseapp.com",
-    databaseURL: "https://laporanharian-d689c-default-rtdb.firebaseio.com",
-    projectId: "laporanharian-d689c",
-    storageBucket: "laporanharian-d689c.appspot.com",
-    messagingSenderId: "161606001787",
-    appId: "1:161606001787:web:a2550a1abf208ce188aede",
-    measurementId: "G-E9SL4RT4TB"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCReZ1Hs1p63Sq6DWODvwbKCgpVPUzVKQA",
+  authDomain: "laporanharian-d689c.firebaseapp.com",
+  databaseURL: "https://laporanharian-d689c-default-rtdb.firebaseio.com",
+  projectId: "laporanharian-d689c",
+  storageBucket: "laporanharian-d689c.appspot.com",
+  messagingSenderId: "161606001787",
+  appId: "1:161606001787:web:a2550a1abf208ce188aede",
+  measurementId: "G-E9SL4RT4TB"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-  let semuaData = {};
-
-  window.generate = function() {
-    const shift = g("shift") || "-";
-    let hasil = `LAPORAN SHIFT ${shift}\n`;
-    if (g("tanggal")) hasil += `Tanggal: ${g("tanggal")}\n`;
-    if (g("produk")) hasil += `Produk: ${g("produk")}\n\n`;
-
-    hasil += "GRINDING\n";
-    if (g("psa")) hasil += `- PSA: ${g("psa")}\n`;
-    if (g("mesh")) hasil += `- Mesh: ${g("mesh")}\n`;
-    if (g("mix_a")) hasil += `- Mix A: ${g("mix_a")}\n`;
-    if (g("mix_b")) hasil += `- Mix B: ${g("mix_b")}\n`;
-    if (g("silo_a")) hasil += `- Silo A: ${g("silo_a")}\n`;
-    if (g("silo_b")) hasil += `- Silo B: ${g("silo_b")}\n`;
-    if (g("catatan_grinding")) hasil += g("catatan_grinding") + "\n\n";
-
-    hasil += "PREPARATION\n";
-    if (g("pulp203")) hasil += `- Pulp 203: ${g("pulp203")}\n`;
-    if (g("pulp204")) hasil += `- Pulp 204: ${g("pulp204")}\n`;
-    if (g("pulp205")) hasil += `- Pulp 205: ${g("pulp205")}\n`;
-    if (g("adhesive_standby")) hasil += `- Adhesive Standby: ${g("adhesive_standby")}\n`;
-    if (g("adhesive_sisa")) hasil += `- Adhesive Sisa: ${g("adhesive_sisa")}\n`;
-    if (g("flavor_standby")) hasil += `- Flavor Standby: ${g("flavor_standby")}\n`;
-    if (g("flavor_sisa")) hasil += `- Flavor Sisa: ${g("flavor_sisa")}\n`;
-    if (g("kalsium")) hasil += `- Kalsium: ${g("kalsium")}\n`;
-    if (g("recycle")) hasil += `- Recycle: ${g("recycle")}\n`;
-    if (g("catatan_preparation")) hasil += g("catatan_preparation") + "\n\n";
-
-    hasil += "FINISH GOOD\n";
-    if (g("mr")) hasil += `- Mother Roll: ${g("mr")}\n`;
-    if (g("fg_berat")) hasil += `- Berat: ${g("fg_berat")} kg\n`;
-    if (g("catatan_finish")) hasil += g("catatan_finish") + "\n\n";
-
-    hasil += "CYLINDER\n";
-    if (g("pisau")) hasil += `- Pisau: ${g("pisau")}\n`;
-    if (g("catatan_cylinder")) hasil += g("catatan_cylinder") + "\n\n";
-
-    hasil += "SLITTING\n";
-    if (g("slit_mr")) hasil += `- MR dipotong: ${g("slit_mr")}\n`;
-    if (g("reject_produksi")) hasil += `- Reject Produksi: ${g("reject_produksi")}\n`;
-    if (g("reject_ncp")) hasil += `- Reject NCP: ${g("reject_ncp")}\n`;
-    if (g("total_bobin_manual")) hasil += `- Total Bobin Manual: ${g("total_bobin_manual")}\n`;
-    if (g("catatan_slitting")) hasil += g("catatan_slitting") + "\n";
-
-    document.getElementById("output").textContent = hasil;
-
-    const tanggal = g("tanggal") || "tanpa_tanggal";
-    const laporanRef = ref(db, "laporan/" + tanggal);
-    const newLaporan = push(laporanRef);
-    set(newLaporan, {
-      shift: shift,
-      laporan: hasil,
-      waktu: new Date().toISOString()
-    })
-    .then(() => showNotif("✅ Laporan berhasil disimpan!", true))
-    .catch(() => showNotif("❌ Gagal menyimpan laporan!", false));
-  };
-
-  const laporanRef = ref(db, "laporan");
-  onValue(laporanRef, (snapshot) => {
-    semuaData = snapshot.val() || {};
-    renderLaporan();
-  });
-
-  window.tampilkanLaporan = function() {
-    renderLaporan();
-  };
-
-  function renderLaporan() {
-    const filterTanggal = document.getElementById("filterTanggal").value;
-    const filterShift = document.getElementById("filterShift").value;
-    const list = document.getElementById("laporanList");
-    list.innerHTML = "";
-
-    if (!semuaData || Object.keys(semuaData).length === 0) {
-      list.innerHTML = "<li>Belum ada laporan tersimpan.</li>";
-      return;
-    }
-
-    Object.keys(semuaData).forEach(tanggal => {
-      if (filterTanggal && tanggal !== filterTanggal) return;
-      const perTanggal = semuaData[tanggal];
-
-      let isiTanggal = "";
-      Object.values(perTanggal).forEach(item => {
-        if (filterShift && item.shift !== filterShift) return;
-        isiTanggal += `
-          <li>
-            <pre>${item.laporan}</pre>
-            <small>Shift: ${item.shift || "-"} | ${item.waktu}</small>
-          </li>`;
-      });
-
-      if (isiTanggal) {
-        const liTanggal = document.createElement("li");
-        liTanggal.innerHTML = `<b>${tanggal}</b><ul>${isiTanggal}</ul>`;
-        list.appendChild(liTanggal);
-      }
+// 🔹 SHIFT
+let dataShift={};
+window.generateShift=function(){
+  const shift=g("shift")||"-";
+  let hasil=`LAPORAN SHIFT ${shift}\nTanggal: ${g("tanggal")}\nProduk: ${g("produk")}\n`;
+  if(g("catatan_grinding"))hasil+=`Catatan Grinding: ${g("catatan_grinding")}\n`;
+  if(g("catatan_preparation"))hasil+=`Catatan Preparation: ${g("catatan_preparation")}\n`;
+  if(g("catatan_finish"))hasil+=`Catatan Finish: ${g("catatan_finish")}\n`;
+  document.getElementById("output").textContent=hasil;
+  const tanggal=g("tanggal")||"tanpa_tanggal";
+  const refDb=ref(db,"laporan_shift/"+tanggal); const newData=push(refDb);
+  set(newData,{shift:shift,laporan:hasil,waktu:new Date().toISOString()})
+  .then(()=>showNotif("✅ Laporan shift tersimpan",true))
+  .catch(()=>showNotif("❌ Gagal simpan",false));
+}
+const refShift=ref(db,"laporan_shift");
+onValue(refShift,(snap)=>{dataShift=snap.val()||{}; renderShift(); renderMonitor();});
+window.tampilkanLaporanShift=function(){renderShift();}
+function renderShift(){
+  const fT=document.getElementById("filterTanggal").value;
+  const fS=document.getElementById("filterShift").value;
+  const list=document.getElementById("laporanList"); list.innerHTML="";
+  Object.keys(dataShift).forEach(tgl=>{
+    if(fT&&tgl!==fT)return;
+    let isi=""; Object.values(dataShift[tgl]).forEach(item=>{
+      if(fS&&item.shift!==fS)return;
+      isi+=`<li><pre>${item.laporan}</pre><small>Shift: ${item.shift} | ${item.waktu}</small></li>`;
     });
-  }
-</script>
+    if(isi){const li=document.createElement("li"); li.innerHTML=`<b>${tgl}</b><ul>${isi}</ul>`; list.appendChild(li);}
+  });
+}
 
+// 🔹 LINE 2 & 3
+let dataLine23={};
+window.generateLine23=function(){
+  let hasil=`LAPORAN LINE 2 & 3\nTanggal: ${g("tanggal2")}\nShift: ${g("shift2")}\nProduk: ${g("produk2")}\n`;
+  if(g("catatan2"))hasil+=`Catatan Line2: ${g("catatan2")}\n`;
+  if(g("catatan3"))hasil+=`Catatan Line3: ${g("catatan3")}\n`;
+  document.getElementById("output2").textContent=hasil;
+  const tanggal=g("tanggal2")||"tanpa_tanggal";
+  const refDb=ref(db,"laporan_line2_3/"+tanggal); const newData=push(refDb);
+  set(newData,{shift:g("shift2"),laporan:hasil,waktu:new Date().toISOString()});
+}
+const refLine23=ref(db,"laporan_line2_3");
+onValue(refLine23,(snap)=>{dataLine23=snap.val()||{}; renderMonitor();});
+
+// 🔹 MONITOR
+function renderMonitor(){
+  const fT=document.getElementById("monitorTanggal").value;
+  const out=document.getElementById("monitorOutput"); out.innerHTML="";
+  // shift
+  Object.keys(dataShift).forEach(tgl=>{
+    if(fT&&tgl!==fT)return;
+    Object.values(dataShift[tgl]).forEach(item=>{
+      const d=document.createElement("details");
+      d.innerHTML=`<summary>Shift | ${tgl} - ${item.shift}</summary><pre>${item.laporan}</pre>`;
+      out.appendChild(d);
+    });
+  });
+  // line2&3
+  Object.keys(dataLine23).forEach(tgl=>{
+    if(fT&&tgl!==fT)return;
+    Object.values(dataLine23[tgl]).forEach(item=>{
+      const d=document.createElement("details");
+      d.innerHTML=`<summary>Line 2&3 | ${tgl} - ${item.shift}</summary><pre>${item.laporan}</pre>`;
+      out.appendChild(d);
+    });
+  });
+}
+</script>
 </body>
 </html>
