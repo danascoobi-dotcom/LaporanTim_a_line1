@@ -12,12 +12,12 @@
       font-weight: bold; cursor: pointer;
     }
     .tabBtn.active { background: #0056b3; }
-    .tabContent { display: none; padding: 16px; max-width: 800px; margin: auto; }
+    .tabContent { display: none; padding: 16px; max-width: 900px; margin: auto; }
     input, textarea, button, select {
       width: 100%; padding: 10px; margin-top: 8px; font-size: 14px;
       border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;
     }
-    button { font-weight: bold; border: none; color: white; cursor: pointer; }
+    button { font-weight: bold; border: none; color: white; cursor: pointer; margin-top: 8px; }
     #generateBtn { background: #28a745; }
     #waBtn { background: #25d366; }
     #copyBtn { background: #007bff; }
@@ -43,7 +43,7 @@
   <button class="tabBtn" onclick="openTab('monitorTab', this)">Monitoring</button>
 </div>
 
-<!-- 🔹 TAB 1: Shift -->
+<!-- 🔹 TAB 1: Laporan Shift -->
 <div id="shiftTab" class="tabContent" style="display:block;">
   <h2>Laporan Shift</h2>
   <input type="date" id="tanggal">
@@ -58,27 +58,49 @@
   <input id="shift" placeholder="Isi shift manual">
 
   <input id="produk" placeholder="Produk">
-  <textarea id="catatan_grinding" placeholder="Catatan Grinding"></textarea>
-  <textarea id="catatan_preparation" placeholder="Catatan Preparation"></textarea>
-  <textarea id="catatan_finish" placeholder="Catatan Finish Good"></textarea>
+
+  <h3>GRINDING</h3>
+  <input id="psa" placeholder="Ukuran PSA / Partikel">
+  <input id="mesh" placeholder="Mesh">
+  <input id="mix_a" placeholder="Mix A">
+  <input id="mix_b" placeholder="Mix B">
+  <input id="silo_a" placeholder="Silo A">
+  <input id="silo_b" placeholder="Silo B">
+  <textarea id="catatan_grinding" placeholder="Catatan Grinding..."></textarea>
+
+  <h3>PREPARATION</h3>
+  <input type="number" id="pulp203" placeholder="Pulp Tangki 203 (set)">
+  <input type="number" id="pulp204" placeholder="Pulp Tangki 204 (set)">
+  <input type="number" id="pulp205" placeholder="Pulp Tangki 205 (set)">
+  <input type="number" id="adhesive_standby" placeholder="Adhesive Standby (set)">
+  <input type="number" id="adhesive_sisa" placeholder="Adhesive Sisa (set)">
+  <input type="number" id="flavor_standby" placeholder="Flavor Standby (set)">
+  <input type="number" id="flavor_sisa" placeholder="Flavor Sisa (set)">
+  <input type="number" id="kalsium" placeholder="Kalsium Standby (set)">
+  <input id="recycle" placeholder="Recycle (mis. 3 set × 20 kg)">
+  <textarea id="catatan_preparation" placeholder="Catatan Preparation..."></textarea>
+
+  <h3>FINISH GOOD</h3>
+  <input type="number" id="mr" placeholder="Mother Roll (roll)">
+  <input type="number" id="fg_berat" placeholder="Total Berat (kg)">
+  <textarea id="catatan_finish" placeholder="Catatan Finish Good..."></textarea>
+
+  <h3>CYLINDER</h3>
+  <input id="pisau" placeholder="Pisau Nomor">
+  <textarea id="catatan_cylinder" placeholder="Catatan Cylinder..."></textarea>
+
+  <h3>SLITTING</h3>
+  <input type="number" id="slit_mr" placeholder="Jumlah MR dipotong">
+  <input type="number" id="reject_produksi" placeholder="Bobin Reject Produksi">
+  <input type="number" id="reject_ncp" placeholder="Bobin Reject NCP">
+  <input type="number" id="total_bobin_manual" placeholder="Total Bobin Manual">
+  <textarea id="catatan_slitting" placeholder="Catatan Slitting..."></textarea>
 
   <button id="generateBtn" onclick="generateShift()">Tampilkan & Simpan</button>
   <div id="notif"></div>
   <pre id="output"></pre>
   <button id="waBtn" onclick="kirimWhatsApp()">Kirim WhatsApp</button>
   <button id="copyBtn" onclick="salinLaporan()">Salin</button>
-
-  <h3>📋 Data Tersimpan</h3>
-  <label>Filter tanggal:</label>
-  <input type="date" id="filterTanggal" onchange="tampilkanLaporanShift()">
-  <label>Filter shift:</label>
-  <select id="filterShift" onchange="tampilkanLaporanShift()">
-    <option value="">Semua</option>
-    <option value="A">Shift A</option>
-    <option value="B">Shift B</option>
-    <option value="C">Shift C</option>
-  </select>
-  <ul id="laporanList"></ul>
 </div>
 
 <!-- 🔹 TAB 2: Line 2 & 3 -->
@@ -146,10 +168,24 @@ const db = getDatabase(app);
 let dataShift={};
 window.generateShift=function(){
   const shift=g("shift")||"-";
-  let hasil=`LAPORAN SHIFT ${shift}\nTanggal: ${g("tanggal")}\nProduk: ${g("produk")}\n`;
-  if(g("catatan_grinding"))hasil+=`Catatan Grinding: ${g("catatan_grinding")}\n`;
-  if(g("catatan_preparation"))hasil+=`Catatan Preparation: ${g("catatan_preparation")}\n`;
-  if(g("catatan_finish"))hasil+=`Catatan Finish: ${g("catatan_finish")}\n`;
+  const bobin_mr=parseInt(g("slit_mr"))||0;
+  const total_bobin=bobin_mr*10;
+  const reject=parseInt(g("reject_produksi"))||0;
+  const reject_ncp=parseInt(g("reject_ncp"))||0;
+  const bobin_oke=total_bobin-reject-reject_ncp;
+  const bobin_oke_kg=bobin_oke*15;
+  const totalManual=parseInt(g("total_bobin_manual"))||0;
+  const totalManualKg=totalManual*15;
+  const oee=(b obin_oke_kg/(10.2*1.09*0.22*480))*100;
+
+  let hasil=`LAPORAN SHIFT ${shift}\nTanggal: ${g("tanggal")}\nProduk: ${g("produk")}\n\n`;
+  hasil+=`GRINDING\n- PSA: ${g("psa")}\n- Mesh: ${g("mesh")}\n- Mix A: ${g("mix_a")}\n- Mix B: ${g("mix_b")}\n- Silo A: ${g("silo_a")}\n- Silo B: ${g("silo_b")}\n${g("catatan_grinding")}\n\n`;
+  hasil+=`PREPARATION\n- Pulp203: ${g("pulp203")}\n- Pulp204: ${g("pulp204")}\n- Pulp205: ${g("pulp205")}\n- Adhesive Standby: ${g("adhesive_standby")}\n- Adhesive Sisa: ${g("adhesive_sisa")}\n- Flavor Standby: ${g("flavor_standby")}\n- Flavor Sisa: ${g("flavor_sisa")}\n- Kalsium: ${g("kalsium")}\n- Recycle: ${g("recycle")}\n${g("catatan_preparation")}\n\n`;
+  hasil+=`FINISH GOOD\n- MR: ${g("mr")}\n- Berat: ${g("fg_berat")} kg\n${g("catatan_finish")}\n\n`;
+  hasil+=`CYLINDER\n- Pisau: ${g("pisau")}\n${g("catatan_cylinder")}\n\n`;
+  hasil+=`SLITTING\n- Potong: ${bobin_mr} MR = ${total_bobin} bobin\n- Reject Produksi: ${reject} bobin (${reject*15}kg)\n- Reject NCP: ${reject_ncp} bobin (${reject_ncp*15}kg)\n- Oke: ${bobin_oke} bobin (${bobin_oke_kg}kg)\n- Total Manual: ${totalManual} bobin (${totalManualKg}kg)\n${g("catatan_slitting")}\n\n`;
+  hasil+=`OEE: ${oee.toFixed(2)}%\n`;
+
   document.getElementById("output").textContent=hasil;
   const tanggal=g("tanggal")||"tanpa_tanggal";
   const refDb=ref(db,"laporan_shift/"+tanggal); const newData=push(refDb);
@@ -158,28 +194,12 @@ window.generateShift=function(){
   .catch(()=>showNotif("❌ Gagal simpan",false));
 }
 const refShift=ref(db,"laporan_shift");
-onValue(refShift,(snap)=>{dataShift=snap.val()||{}; renderShift(); renderMonitor();});
-window.tampilkanLaporanShift=function(){renderShift();}
-function renderShift(){
-  const fT=document.getElementById("filterTanggal").value;
-  const fS=document.getElementById("filterShift").value;
-  const list=document.getElementById("laporanList"); list.innerHTML="";
-  Object.keys(dataShift).forEach(tgl=>{
-    if(fT&&tgl!==fT)return;
-    let isi=""; Object.values(dataShift[tgl]).forEach(item=>{
-      if(fS&&item.shift!==fS)return;
-      isi+=`<li><pre>${item.laporan}</pre><small>Shift: ${item.shift} | ${item.waktu}</small></li>`;
-    });
-    if(isi){const li=document.createElement("li"); li.innerHTML=`<b>${tgl}</b><ul>${isi}</ul>`; list.appendChild(li);}
-  });
-}
+onValue(refShift,(snap)=>{dataShift=snap.val()||{}; renderMonitor();});
 
 // 🔹 LINE 2 & 3
 let dataLine23={};
 window.generateLine23=function(){
-  let hasil=`LAPORAN LINE 2 & 3\nTanggal: ${g("tanggal2")}\nShift: ${g("shift2")}\nProduk: ${g("produk2")}\n`;
-  if(g("catatan2"))hasil+=`Catatan Line2: ${g("catatan2")}\n`;
-  if(g("catatan3"))hasil+=`Catatan Line3: ${g("catatan3")}\n`;
+  let hasil=`LAPORAN LINE 2 & 3\nTanggal: ${g("tanggal2")}\nShift: ${g("shift2")}\nProduk: ${g("produk2")}\nCatatan Line2: ${g("catatan2")}\nCatatan Line3: ${g("catatan3")}`;
   document.getElementById("output2").textContent=hasil;
   const tanggal=g("tanggal2")||"tanpa_tanggal";
   const refDb=ref(db,"laporan_line2_3/"+tanggal); const newData=push(refDb);
@@ -192,7 +212,6 @@ onValue(refLine23,(snap)=>{dataLine23=snap.val()||{}; renderMonitor();});
 function renderMonitor(){
   const fT=document.getElementById("monitorTanggal").value;
   const out=document.getElementById("monitorOutput"); out.innerHTML="";
-  // shift
   Object.keys(dataShift).forEach(tgl=>{
     if(fT&&tgl!==fT)return;
     Object.values(dataShift[tgl]).forEach(item=>{
@@ -201,7 +220,6 @@ function renderMonitor(){
       out.appendChild(d);
     });
   });
-  // line2&3
   Object.keys(dataLine23).forEach(tgl=>{
     if(fT&&tgl!==fT)return;
     Object.values(dataLine23[tgl]).forEach(item=>{
@@ -213,4 +231,4 @@ function renderMonitor(){
 }
 </script>
 </body>
-</html>
+  </html>
