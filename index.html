@@ -91,8 +91,18 @@
 <hr>
 <div id="listLaporan" style="margin-top:20px; padding:10px; background:#fff; border-radius:8px;">
   <h3>📋 Data Laporan Realtime</h3>
+
   <label>Filter tanggal:</label>
   <input type="date" id="filterTanggal" onchange="tampilkanLaporan()">
+
+  <label>Filter shift:</label>
+  <select id="filterShift" onchange="tampilkanLaporan()">
+    <option value="">Semua</option>
+    <option value="A">Shift A</option>
+    <option value="B">Shift B</option>
+    <option value="C">Shift C</option>
+  </select>
+
   <ul id="laporanList"></ul>
 </div>
 
@@ -204,7 +214,6 @@ function salinLaporan() {
 
     document.getElementById("output").textContent = hasil;
 
-    // simpan ke firebase
     const tanggal = g("tanggal") || "tanpa_tanggal";
     const laporanRef = ref(db, "laporan/" + tanggal);
     const newLaporan = push(laporanRef);
@@ -229,6 +238,7 @@ function salinLaporan() {
 
   function renderLaporan() {
     const filterTanggal = document.getElementById("filterTanggal").value;
+    const filterShift = document.getElementById("filterShift").value;
     const list = document.getElementById("laporanList");
     list.innerHTML = "";
 
@@ -240,17 +250,22 @@ function salinLaporan() {
     Object.keys(semuaData).forEach(tanggal => {
       if (filterTanggal && tanggal !== filterTanggal) return;
       const perTanggal = semuaData[tanggal];
-      const liTanggal = document.createElement("li");
-      liTanggal.innerHTML = `<b>${tanggal}</b><ul>`;
+
+      let isiTanggal = "";
       Object.values(perTanggal).forEach(item => {
-        liTanggal.innerHTML += `
+        if (filterShift && item.shift !== filterShift) return;
+        isiTanggal += `
           <li>
             <pre>${item.laporan}</pre>
             <small>Shift: ${item.shift || "-"} | ${item.waktu}</small>
           </li>`;
       });
-      liTanggal.innerHTML += "</ul>";
-      list.appendChild(liTanggal);
+
+      if (isiTanggal) {
+        const liTanggal = document.createElement("li");
+        liTanggal.innerHTML = `<b>${tanggal}</b><ul>${isiTanggal}</ul>`;
+        list.appendChild(liTanggal);
+      }
     });
   }
 </script>
