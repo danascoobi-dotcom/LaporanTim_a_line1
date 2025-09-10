@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laporan Shift A</title>
+  <title>Laporan Shift</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 16px; background: #f2f2f2; max-width: 700px; margin: auto; }
     input, textarea, button, select {
       width: 100%; padding: 10px; margin-top: 10px; font-size: 14px;
       border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;
     }
-    button { font-weight: bold; border: none; color: white; cursor: pointer; }
+    button { font-weight: bold; border: none; color: white; cursor: pointer; margin-top: 5px; }
     #generateBtn { background: #28a745; }
     #waBtn { background: #25d366; }
-    #gptBtn { background: #007bff; }
+    #copyBtn { background: #007bff; }
     pre {
       background: #fff; padding: 12px; border-radius: 5px; border: 1px solid #ccc;
       white-space: pre-wrap; font-family: monospace;
@@ -30,8 +30,19 @@
 </head>
 <body>
 
-<h2>Laporan Shift A</h2>
+<h2>Input Laporan Produksi</h2>
 <input type="date" id="tanggal">
+
+<label for="shift">Pilih Shift:</label>
+<select id="shiftSelect" onchange="updateShiftInput()">
+  <option value="">-- Pilih Shift --</option>
+  <option value="A">Shift A</option>
+  <option value="B">Shift B</option>
+  <option value="C">Shift C</option>
+  <option value="lain">Lainnya (isi manual)</option>
+</select>
+<input id="shift" placeholder="Isi shift manual jika pilih 'Lainnya'">
+
 <input id="produk" placeholder="Produk">
 
 <h3>GRINDING</h3>
@@ -74,6 +85,8 @@
 <button id="generateBtn" onclick="generate()">Tampilkan Laporan (Auto Save)</button>
 <div id="notif"></div>
 <pre id="output"></pre>
+<button id="waBtn" onclick="kirimWhatsApp()">Kirim ke WhatsApp</button>
+<button id="copyBtn" onclick="salinLaporan()">Salin Laporan</button>
 
 <hr>
 <div id="listLaporan" style="margin-top:20px; padding:10px; background:#fff; border-radius:8px;">
@@ -93,6 +106,35 @@ function showNotif(pesan, sukses = true) {
   notif.className = sukses ? "sukses" : "gagal";
   notif.style.display = "block";
   setTimeout(() => notif.style.display = "none", 3000);
+}
+
+function updateShiftInput() {
+  const select = document.getElementById("shiftSelect");
+  const input = document.getElementById("shift");
+  if (select.value === "lain") {
+    input.style.display = "block";
+    input.value = "";
+  } else {
+    input.style.display = "none";
+    input.value = select.value;
+  }
+}
+
+function kirimWhatsApp() {
+  const isi = document.getElementById("output").textContent;
+  if (isi) {
+    const url = "https://wa.me/?text=" + encodeURIComponent(isi);
+    window.open(url, "_blank");
+  }
+}
+
+function salinLaporan() {
+  const isi = document.getElementById("output").textContent;
+  if (isi) {
+    navigator.clipboard.writeText(isi).then(() => {
+      showNotif("📋 Laporan disalin ke clipboard", true);
+    });
+  }
 }
 </script>
 
@@ -117,9 +159,9 @@ function showNotif(pesan, sukses = true) {
 
   let semuaData = {};
 
-  // 🔹 Generate + simpan
   window.generate = function() {
-    let hasil = "LAPORAN SHIFT A\n";
+    const shift = g("shift") || "-";
+    let hasil = `LAPORAN SHIFT ${shift}\n`;
     if (g("tanggal")) hasil += `Tanggal: ${g("tanggal")}\n`;
     if (g("produk")) hasil += `Produk: ${g("produk")}\n\n`;
 
@@ -167,6 +209,7 @@ function showNotif(pesan, sukses = true) {
     const laporanRef = ref(db, "laporan/" + tanggal);
     const newLaporan = push(laporanRef);
     set(newLaporan, {
+      shift: shift,
       laporan: hasil,
       waktu: new Date().toISOString()
     })
@@ -174,14 +217,12 @@ function showNotif(pesan, sukses = true) {
     .catch(() => showNotif("❌ Gagal menyimpan laporan!", false));
   };
 
-  // 🔹 Listener realtime
   const laporanRef = ref(db, "laporan");
   onValue(laporanRef, (snapshot) => {
     semuaData = snapshot.val() || {};
     renderLaporan();
   });
 
-  // 🔹 Render laporan dengan filter
   window.tampilkanLaporan = function() {
     renderLaporan();
   };
@@ -205,7 +246,7 @@ function showNotif(pesan, sukses = true) {
         liTanggal.innerHTML += `
           <li>
             <pre>${item.laporan}</pre>
-            <small>${item.waktu}</small>
+            <small>Shift: ${item.shift || "-"} | ${item.waktu}</small>
           </li>`;
       });
       liTanggal.innerHTML += "</ul>";
