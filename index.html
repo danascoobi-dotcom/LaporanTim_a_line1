@@ -1,287 +1,376 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laporan Shift</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Laporan Shift - Perbaikan Filter Shift</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; background: #f2f2f2; max-width: 700px; margin: auto; }
+    body { font-family: Arial, sans-serif; padding: 16px; background: #f2f2f2; max-width: 900px; margin: auto; }
+    h2, h3 { margin-top: 18px; }
     input, textarea, button, select {
       width: 100%; padding: 10px; margin-top: 10px; font-size: 14px;
-      border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;
+      border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;
     }
-    button { font-weight: bold; border: none; color: white; cursor: pointer; margin-top: 5px; }
+    textarea { min-height: 60px; resize: vertical; }
+    .btn { font-weight: 700; border: none; color: white; cursor: pointer; margin-top: 8px; padding: 12px; border-radius: 8px; }
     #generateBtn { background: #28a745; }
     #waBtn { background: #25d366; }
     #copyBtn { background: #007bff; }
-    #hapusBtn { background: #dc3545; }
+    .danger { background: #dc3545; }
     pre {
-      background: #fff; padding: 12px; border-radius: 5px; border: 1px solid #ccc;
-      white-space: pre-wrap; font-family: monospace;
+      background: #fff; padding: 12px; border-radius: 6px; border: 1px solid #ccc;
+      white-space: pre-wrap; font-family: monospace; max-height: 300px; overflow: auto;
     }
-    #listLaporan ul { list-style: none; padding-left: 10px; }
-    #listLaporan li { margin-bottom: 10px; }
-    #notif {
-      margin-top: 10px; padding: 8px; border-radius: 5px; font-size: 14px;
-      display: none;
-    }
+    #listLaporan { margin-top: 18px; padding: 14px; background: #fff; border-radius: 8px; }
+    #listLaporan ul { list-style: none; padding-left: 10px; margin: 0; }
+    #listLaporan li { margin-bottom: 12px; }
+    #notif { margin-top: 10px; padding: 8px; border-radius: 6px; font-size: 14px; display: none; }
     #notif.sukses { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     #notif.gagal { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .small { font-size: 12px; color: #555; }
+    .flex-row { display: flex; gap: 8px; }
+    .flex-row > * { flex: 1; }
+    .inline-btn { display:inline-block; padding:6px 10px; border-radius:6px; border:none; cursor:pointer; font-weight:600; margin-top:6px; }
+    .inline-delete { background:#dc3545; color:#fff; }
+    .inline-copy { background:#007bff; color:#fff; }
   </style>
 </head>
 <body>
+  <h2>Input Laporan Produksi</h2>
 
-<h2>Input Laporan Produksi</h2>
-<input type="date" id="tanggal">
+  <label>Tanggal</label>
+  <input type="date" id="tanggal">
 
-<label for="shift">Pilih Shift:</label>
-<select id="shiftSelect" onchange="updateShiftInput()">
-  <option value="">-- Pilih Shift --</option>
-  <option value="A">Shift A</option>
-  <option value="B">Shift B</option>
-  <option value="C">Shift C</option>
-  <option value="lain">Lainnya (isi manual)</option>
-</select>
-<input id="shift" placeholder="Isi shift manual jika pilih 'Lainnya'">
-
-<input id="produk" placeholder="Produk">
-
-<h3>GRINDING</h3>
-<input id="psa" placeholder="Ukuran PSA / Partikel">
-<input id="mesh" placeholder="Mesh">
-<input id="mix_a" placeholder="Mix A">
-<input id="mix_b" placeholder="Mix B">
-<input id="silo_a" placeholder="Silo A">
-<input id="silo_b" placeholder="Silo B">
-<textarea id="catatan_grinding" placeholder="Catatan Grinding..."></textarea>
-
-<h3>PREPARATION</h3>
-<input type="number" id="pulp203" placeholder="Pulp Tangki 203 (set)">
-<input type="number" id="pulp204" placeholder="Pulp Tangki 204 (set)">
-<input type="number" id="pulp205" placeholder="Pulp Tangki 205 (set)">
-<input type="number" id="adhesive_standby" placeholder="Adhesive Standby (set)">
-<input type="number" id="adhesive_sisa" placeholder="Adhesive Sisa (set)">
-<input type="number" id="flavor_standby" placeholder="Flavor Standby (set)">
-<input type="number" id="flavor_sisa" placeholder="Flavor Sisa (set)">
-<input type="number" id="kalsium" placeholder="Kalsium Standby (set)">
-<input id="recycle" placeholder="Recycle (mis. 3 set × 20 kg = 60 kg)">
-<textarea id="catatan_preparation" placeholder="Catatan Preparation..."></textarea>
-
-<h3>FINISH GOOD</h3>
-<input type="number" id="mr" placeholder="Jumlah Mother Roll (roll)">
-<input type="number" id="fg_berat" placeholder="Total Berat (kg)">
-<textarea id="catatan_finish" placeholder="Catatan Finish Good..."></textarea>
-
-<h3>CYLINDER</h3>
-<input id="pisau" placeholder="Pisau Nomor">
-<textarea id="catatan_cylinder" placeholder="Catatan Cylinder..."></textarea>
-
-<h3>SLITTING</h3>
-<input type="number" id="slit_mr" placeholder="Jumlah MR yang dipotong">
-<input type="number" id="reject_produksi" placeholder="Bobin Reject Produksi">
-<input type="number" id="reject_ncp" placeholder="Bobin Reject NCP">
-<input type="number" id="total_bobin_manual" placeholder="Total Bobin Manual">
-<textarea id="catatan_slitting" placeholder="Catatan Slitting..."></textarea>
-
-<button id="generateBtn" onclick="generate()">Tampilkan Laporan (Auto Save)</button>
-<div id="notif"></div>
-<pre id="output"></pre>
-<button id="waBtn" onclick="kirimWhatsApp()">Kirim ke WhatsApp</button>
-<button id="copyBtn" onclick="salinLaporan()">Salin Laporan</button>
-
-<hr>
-<div id="listLaporan" style="margin-top:20px; padding:10px; background:#fff; border-radius:8px;">
-  <h3>📋 Data Laporan Realtime</h3>
-
-  <label>Filter tanggal:</label>
-  <input type="date" id="filterTanggal" onchange="tampilkanLaporan()">
-
-  <label>Filter shift:</label>
-  <select id="filterShift" onchange="tampilkanLaporan()">
-    <option value="">Semua</option>
+  <label for="shiftSelect">Pilih Shift</label>
+  <select id="shiftSelect" onchange="updateShiftInput()">
+    <option value="">-- Pilih Shift --</option>
     <option value="A">Shift A</option>
     <option value="B">Shift B</option>
     <option value="C">Shift C</option>
+    <option value="lain">Lainnya (isi manual)</option>
   </select>
 
-  <ul id="laporanList"></ul>
-</div>
+  <!-- input manual untuk shift; dipakai kalau pilih 'lain' -->
+  <input id="shift" placeholder="Isi shift manual jika pilih 'Lainnya' (atau biarkan kosong)" style="display:none;">
 
-<script>
-function g(id) { return document.getElementById(id).value.trim(); }
-function n(id) { return parseInt(g(id)) || 0; }
+  <input id="produk" placeholder="Produk">
 
-function showNotif(pesan, sukses = true) {
-  const notif = document.getElementById("notif");
-  notif.textContent = pesan;
-  notif.className = sukses ? "sukses" : "gagal";
-  notif.style.display = "block";
-  setTimeout(() => notif.style.display = "none", 3000);
-}
+  <h3>GRINDING</h3>
+  <input id="psa" placeholder="Ukuran PSA / Partikel">
+  <input id="mesh" placeholder="Mesh">
+  <input id="mix_a" placeholder="Mix A">
+  <input id="mix_b" placeholder="Mix B">
+  <input id="silo_a" placeholder="Silo A">
+  <input id="silo_b" placeholder="Silo B">
+  <textarea id="catatan_grinding" placeholder="Catatan Grinding..."></textarea>
 
-function updateShiftInput() {
-  const select = document.getElementById("shiftSelect");
-  const input = document.getElementById("shift");
-  if (select.value === "lain") {
-    input.style.display = "block";
-    input.value = "";
-  } else {
-    input.style.display = "none";
-    input.value = select.value;
-  }
-}
+  <h3>PREPARATION</h3>
+  <input type="number" id="pulp203" placeholder="Pulp Tangki 203 (set)">
+  <input type="number" id="pulp204" placeholder="Pulp Tangki 204 (set)">
+  <input type="number" id="pulp205" placeholder="Pulp Tangki 205 (set)">
+  <input type="number" id="adhesive_standby" placeholder="Adhesive Standby (set)">
+  <input type="number" id="adhesive_sisa" placeholder="Adhesive Sisa (set)">
+  <input type="number" id="flavor_standby" placeholder="Flavor Standby (set)">
+  <input type="number" id="flavor_sisa" placeholder="Flavor Sisa (set)">
+  <input type="number" id="kalsium" placeholder="Kalsium Standby (set)">
+  <input id="recycle" placeholder="Recycle (mis. 3 set × 20 kg = 60 kg)">
+  <textarea id="catatan_preparation" placeholder="Catatan Preparation..."></textarea>
 
-function kirimWhatsApp() {
-  const isi = document.getElementById("output").textContent;
-  if (isi) {
-    const url = "https://wa.me/?text=" + encodeURIComponent(isi);
-    window.open(url, "_blank");
-  }
-}
+  <h3>FINISH GOOD</h3>
+  <input type="number" id="mr" placeholder="Jumlah Mother Roll (roll)">
+  <input type="number" id="fg_berat" placeholder="Total Berat (kg)">
+  <textarea id="catatan_finish" placeholder="Catatan Finish Good..."></textarea>
 
-function salinLaporan() {
-  const isi = document.getElementById("output").textContent;
-  if (isi) {
-    navigator.clipboard.writeText(isi).then(() => {
-      showNotif("📋 Laporan disalin ke clipboard", true);
+  <h3>CYLINDER</h3>
+  <input id="pisau" placeholder="Pisau Nomor">
+  <textarea id="catatan_cylinder" placeholder="Catatan Cylinder..."></textarea>
+
+  <h3>SLITTING</h3>
+  <input type="number" id="slit_mr" placeholder="Jumlah MR yang dipotong">
+  <input type="number" id="reject_produksi" placeholder="Bobin Reject Produksi">
+  <input type="number" id="reject_ncp" placeholder="Bobin Reject NCP">
+  <input type="number" id="total_bobin_manual" placeholder="Total Bobin Manual">
+  <textarea id="catatan_slitting" placeholder="Catatan Slitting..."></textarea>
+
+  <button id="generateBtn" class="btn" onclick="generate()">Tampilkan Laporan (Auto Save)</button>
+  <div id="notif"></div>
+
+  <pre id="output"></pre>
+
+  <div class="flex-row">
+    <button id="waBtn" class="btn" style="background:#25d366" onclick="kirimWhatsApp()">Kirim ke WhatsApp</button>
+    <button id="copyBtn" class="btn" style="background:#007bff" onclick="salinLaporan()">Salin Laporan</button>
+  </div>
+
+  <hr>
+
+  <div id="listLaporan">
+    <h3>📋 Data Laporan Realtime</h3>
+
+    <label>Filter tanggal:</label>
+    <input type="date" id="filterTanggal" onchange="tampilkanLaporan()">
+
+    <label>Filter shift:</label>
+    <div class="flex-row">
+      <select id="filterShift" onchange="tampilkanLaporan()">
+        <option value="">Semua</option>
+        <option value="A">Shift A</option>
+        <option value="B">Shift B</option>
+        <option value="C">Shift C</option>
+      </select>
+      <button class="inline-btn" onclick="resetFilter()" style="background:#6c757d; color:#fff;">Reset Filter</button>
+    </div>
+
+    <ul id="laporanList"></ul>
+  </div>
+
+  <script>
+    // helper functions
+    function g(id) { 
+      const el = document.getElementById(id);
+      return el ? String(el.value || "").trim() : "";
+    }
+    function n(id) { return parseInt(g(id)) || 0; }
+
+    function showNotif(pesan, sukses = true) {
+      const notif = document.getElementById("notif");
+      notif.textContent = pesan;
+      notif.className = sukses ? "sukses" : "gagal";
+      notif.style.display = "block";
+      setTimeout(() => notif.style.display = "none", 3500);
+    }
+
+    function updateShiftInput() {
+      const select = document.getElementById("shiftSelect");
+      const input = document.getElementById("shift");
+      if (!select) return;
+      if (select.value === "lain") {
+        input.style.display = "block";
+        input.value = "";
+        input.focus();
+      } else {
+        // pastikan input manual diisi dengan value singkat (A/B/C) agar konsisten
+        input.style.display = "none";
+        input.value = select.value; // isi "A","B","C"
+      }
+    }
+
+    // WhatsApp dan copy
+    function kirimWhatsApp() {
+      const isi = document.getElementById("output").textContent;
+      if (isi) {
+        const url = "https://wa.me/?text=" + encodeURIComponent(isi);
+        window.open(url, "_blank");
+      } else {
+        showNotif("Tidak ada laporan untuk dikirim.", false);
+      }
+    }
+
+    function salinLaporan() {
+      const isi = document.getElementById("output").textContent;
+      if (isi) {
+        navigator.clipboard.writeText(isi).then(() => {
+          showNotif("📋 Laporan disalin ke clipboard", true);
+        }).catch(() => {
+          showNotif("Gagal menyalin laporan (clipboard).", false);
+        });
+      } else {
+        showNotif("Tidak ada laporan untuk disalin.", false);
+      }
+    }
+
+    function resetFilter() {
+      document.getElementById("filterTanggal").value = "";
+      document.getElementById("filterShift").value = "";
+      tampilkanLaporan();
+    }
+
+    // ---------------- Firebase (module) ----------------
+  </script>
+
+  <!-- Firebase (module) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCReZ1Hs1p63Sq6DWODvwbKCgpVPUzVKQA",
+      authDomain: "laporanharian-d689c.firebaseapp.com",
+      databaseURL: "https://laporanharian-d689c-default-rtdb.firebaseio.com",
+      projectId: "laporanharian-d689c",
+      storageBucket: "laporanharian-d689c.appspot.com",
+      messagingSenderId: "161606001787",
+      appId: "1:161606001787:web:a2550a1abf208ce188aede",
+      measurementId: "G-E9SL4RT4TB"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let semuaData = {};
+
+    // fungsi generate (disimpan hanya A/B/C atau manual)
+    window.generate = function() {
+      // ambil nilai shift: prioritaskan select, kalau manual isi gunakan itu
+      let shift = g("shiftSelect") || g("shift") || "-";
+      // jika user memilih opsi "Shift A" di UI lama (misalnya value 'Shift A'), normalisasi:
+      if (typeof shift === "string" && shift.startsWith("Shift ")) {
+        shift = shift.replace("Shift ", ""); // "A","B","C"
+      }
+      // pastikan trim uppercase first char
+      shift = String(shift).trim();
+
+      let hasil = `LAPORAN SHIFT ${shift}\n`;
+      if (g("tanggal")) hasil += `Tanggal: ${g("tanggal")}\n`;
+      if (g("produk")) hasil += `Produk: ${g("produk")}\n\n`;
+
+      hasil += "GRINDING\n";
+      if (g("psa")) hasil += `- PSA: ${g("psa")}\n`;
+      if (g("mesh")) hasil += `- Mesh: ${g("mesh")}\n`;
+      if (g("mix_a")) hasil += `- Mix A: ${g("mix_a")}\n`;
+      if (g("mix_b")) hasil += `- Mix B: ${g("mix_b")}\n`;
+      if (g("silo_a")) hasil += `- Silo A: ${g("silo_a")}\n`;
+      if (g("silo_b")) hasil += `- Silo B: ${g("silo_b")}\n`;
+      if (g("catatan_grinding")) hasil += g("catatan_grinding") + "\n\n";
+
+      hasil += "PREPARATION\n";
+      if (g("pulp203")) hasil += `- Pulp 203: ${g("pulp203")}\n`;
+      if (g("pulp204")) hasil += `- Pulp 204: ${g("pulp204")}\n`;
+      if (g("pulp205")) hasil += `- Pulp 205: ${g("pulp205")}\n`;
+      if (g("adhesive_standby")) hasil += `- Adhesive Standby: ${g("adhesive_standby")}\n`;
+      if (g("adhesive_sisa")) hasil += `- Adhesive Sisa: ${g("adhesive_sisa")}\n`;
+      if (g("flavor_standby")) hasil += `- Flavor Standby: ${g("flavor_standby")}\n`;
+      if (g("flavor_sisa")) hasil += `- Flavor Sisa: ${g("flavor_sisa")}\n`;
+      if (g("kalsium")) hasil += `- Kalsium: ${g("kalsium")}\n`;
+      if (g("recycle")) hasil += `- Recycle: ${g("recycle")}\n`;
+      if (g("catatan_preparation")) hasil += g("catatan_preparation") + "\n\n";
+
+      hasil += "FINISH GOOD\n";
+      if (g("mr")) hasil += `- Mother Roll: ${g("mr")}\n`;
+      if (g("fg_berat")) hasil += `- Berat: ${g("fg_berat")} kg\n`;
+      if (g("catatan_finish")) hasil += g("catatan_finish") + "\n\n";
+
+      hasil += "CYLINDER\n";
+      if (g("pisau")) hasil += `- Pisau: ${g("pisau")}\n`;
+      if (g("catatan_cylinder")) hasil += g("catatan_cylinder") + "\n\n";
+
+      hasil += "SLITTING\n";
+      if (g("slit_mr")) hasil += `- MR dipotong: ${g("slit_mr")}\n`;
+      if (g("reject_produksi")) hasil += `- Reject Produksi: ${g("reject_produksi")}\n`;
+      if (g("reject_ncp")) hasil += `- Reject NCP: ${g("reject_ncp")}\n`;
+      if (g("total_bobin_manual")) hasil += `- Total Bobin Manual: ${g("total_bobin_manual")}\n`;
+      if (g("catatan_slitting")) hasil += g("catatan_slitting") + "\n";
+
+      document.getElementById("output").textContent = hasil;
+
+      const tanggal = g("tanggal") || "tanpa_tanggal";
+      const laporanRef = ref(db, "laporan/" + tanggal);
+      const newLaporan = push(laporanRef);
+      set(newLaporan, {
+        shift: shift,  // disimpan cuma "A" / "B" / "C" / manual
+        laporan: hasil,
+        waktu: new Date().toISOString()
+      })
+      .then(() => {
+        showNotif("✅ Laporan berhasil disimpan!", true);
+      })
+      .catch((err) => {
+        console.error(err);
+        showNotif("❌ Gagal menyimpan laporan!", false);
+      });
+    };
+
+    // ambil semua laporan realtime
+    const laporanRef = ref(db, "laporan");
+    onValue(laporanRef, (snapshot) => {
+      semuaData = snapshot.val() || {};
+      renderLaporan();
     });
-  }
-}
-</script>
 
-<!-- 🔹 Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-  import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+    window.tampilkanLaporan = function() {
+      renderLaporan();
+    };
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCReZ1Hs1p63Sq6DWODvwbKCgpVPUzVKQA",
-    authDomain: "laporanharian-d689c.firebaseapp.com",
-    databaseURL: "https://laporanharian-d689c-default-rtdb.firebaseio.com",
-    projectId: "laporanharian-d689c",
-    storageBucket: "laporanharian-d689c.appspot.com",
-    messagingSenderId: "161606001787",
-    appId: "1:161606001787:web:a2550a1abf208ce188aede",
-    measurementId: "G-E9SL4RT4TB"
-  };
+    window.hapusLaporan = function(tanggal, key) {
+      if (!confirm("Yakin mau hapus laporan ini?")) return;
+      remove(ref(db, "laporan/" + tanggal + "/" + key))
+        .then(() => showNotif("Laporan dihapus.", true))
+        .catch(() => showNotif("Gagal menghapus laporan.", false));
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+    function renderLaporan() {
+      const filterTanggal = document.getElementById("filterTanggal").value;
+      const filterShift = document.getElementById("filterShift").value;
+      const list = document.getElementById("laporanList");
+      list.innerHTML = "";
 
-  let semuaData = {};
+      if (!semuaData || Object.keys(semuaData).length === 0) {
+        list.innerHTML = "<li>Belum ada laporan tersimpan.</li>";
+        return;
+      }
 
-  window.generate = function() {
-    const shift = g("shift") || "-";
-    let hasil = `LAPORAN SHIFT ${shift}\n`;
-    if (g("tanggal")) hasil += `Tanggal: ${g("tanggal")}\n`;
-    if (g("produk")) hasil += `Produk: ${g("produk")}\n\n`;
+      // urut tanggal descending (opsional): ambil keys dan sort
+      const tanggalKeys = Object.keys(semuaData).sort((a,b) => b.localeCompare(a));
 
-    hasil += "GRINDING\n";
-    if (g("psa")) hasil += `- PSA: ${g("psa")}\n`;
-    if (g("mesh")) hasil += `- Mesh: ${g("mesh")}\n`;
-    if (g("mix_a")) hasil += `- Mix A: ${g("mix_a")}\n`;
-    if (g("mix_b")) hasil += `- Mix B: ${g("mix_b")}\n`;
-    if (g("silo_a")) hasil += `- Silo A: ${g("silo_a")}\n`;
-    if (g("silo_b")) hasil += `- Silo B: ${g("silo_b")}\n`;
-    if (g("catatan_grinding")) hasil += g("catatan_grinding") + "\n\n";
+      let adaYangTampil = false;
 
-    hasil += "PREPARATION\n";
-    if (g("pulp203")) hasil += `- Pulp 203: ${g("pulp203")}\n`;
-    if (g("pulp204")) hasil += `- Pulp 204: ${g("pulp204")}\n`;
-    if (g("pulp205")) hasil += `- Pulp 205: ${g("pulp205")}\n`;
-    if (g("adhesive_standby")) hasil += `- Adhesive Standby: ${g("adhesive_standby")}\n`;
-    if (g("adhesive_sisa")) hasil += `- Adhesive Sisa: ${g("adhesive_sisa")}\n`;
-    if (g("flavor_standby")) hasil += `- Flavor Standby: ${g("flavor_standby")}\n`;
-    if (g("flavor_sisa")) hasil += `- Flavor Sisa: ${g("flavor_sisa")}\n`;
-    if (g("kalsium")) hasil += `- Kalsium: ${g("kalsium")}\n`;
-    if (g("recycle")) hasil += `- Recycle: ${g("recycle")}\n`;
-    if (g("catatan_preparation")) hasil += g("catatan_preparation") + "\n\n";
+      tanggalKeys.forEach(tanggal => {
+        if (filterTanggal && tanggal !== filterTanggal) return;
 
-    hasil += "FINISH GOOD\n";
-    if (g("mr")) hasil += `- Mother Roll: ${g("mr")}\n`;
-    if (g("fg_berat")) hasil += `- Berat: ${g("fg_berat")} kg\n`;
-    if (g("catatan_finish")) hasil += g("catatan_finish") + "\n\n";
+        const perTanggal = semuaData[tanggal];
+        let isiTanggal = "";
 
-    hasil += "CYLINDER\n";
-    if (g("pisau")) hasil += `- Pisau: ${g("pisau")}\n`;
-    if (g("catatan_cylinder")) hasil += g("catatan_cylinder") + "\n\n";
+        Object.keys(perTanggal).forEach(key => {
+          const item = perTanggal[key];
+          // skip laporan tanpa teks
+          if (!item.laporan) return;
 
-    hasil += "SLITTING\n";
-    if (g("slit_mr")) hasil += `- MR dipotong: ${g("slit_mr")}\n`;
-    if (g("reject_produksi")) hasil += `- Reject Produksi: ${g("reject_produksi")}\n`;
-    if (g("reject_ncp")) hasil += `- Reject NCP: ${g("reject_ncp")}\n`;
-    if (g("total_bobin_manual")) hasil += `- Total Bobin Manual: ${g("total_bobin_manual")}\n`;
-    if (g("catatan_slitting")) hasil += g("catatan_slitting") + "\n";
+          // filter shift: jika filterShift terisi, bandingkan exact match
+          if (filterShift && String(item.shift || "").trim() !== filterShift) return;
 
-    document.getElementById("output").textContent = hasil;
+          // skip laporan test (opsional)
+          if (item.laporan.toLowerCase().includes("tes laporan")) return;
 
-    const tanggal = g("tanggal") || "tanpa_tanggal";
-    const laporanRef = ref(db, "laporan/" + tanggal);
-    const newLaporan = push(laporanRef);
-    set(newLaporan, {
-      shift: shift,
-      laporan: hasil,
-      waktu: new Date().toISOString()
-    })
-    .then(() => showNotif("✅ Laporan berhasil disimpan!", true))
-    .catch(() => showNotif("❌ Gagal menyimpan laporan!", false));
-  };
+          adaYangTampil = true;
 
-  const laporanRef = ref(db, "laporan");
-  onValue(laporanRef, (snapshot) => {
-    semuaData = snapshot.val() || {};
-    renderLaporan();
-  });
+          // tampilkan item
+          isiTanggal += `
+            <li style="border-radius:6px; padding:8px; background:#fafafa; margin-bottom:8px;">
+              <pre style="margin:0; white-space:pre-wrap;">${escapeHtml(item.laporan)}</pre>
+              <div class="small" style="margin-top:6px;">Shift: ${escapeHtml(String(item.shift || "-"))} | ${escapeHtml(item.waktu || "-")}</div>
+              <div style="margin-top:6px;">
+                <button class="inline-delete" onclick="hapusLaporan('${tanggal}','${key}')">Hapus</button>
+              </div>
+            </li>
+          `;
+        });
 
-  window.tampilkanLaporan = function() {
-    renderLaporan();
-  };
-
-  window.hapusLaporan = function(tanggal, key) {
-    if (confirm("Yakin mau hapus laporan ini?")) {
-      remove(ref(db, "laporan/" + tanggal + "/" + key));
-    }
-  };
-
-  function renderLaporan() {
-    const filterTanggal = document.getElementById("filterTanggal").value;
-    const filterShift = document.getElementById("filterShift").value;
-    const list = document.getElementById("laporanList");
-    list.innerHTML = "";
-
-    if (!semuaData || Object.keys(semuaData).length === 0) {
-      list.innerHTML = "<li>Belum ada laporan tersimpan.</li>";
-      return;
-    }
-
-    Object.keys(semuaData).forEach(tanggal => {
-      if (filterTanggal && tanggal !== filterTanggal) return;
-      const perTanggal = semuaData[tanggal];
-
-      let isiTanggal = "";
-      Object.keys(perTanggal).forEach(key => {
-        const item = perTanggal[key];
-        if (filterShift && item.shift !== filterShift) return;
-
-        // 🚫 skip laporan test
-        if (!item.laporan || item.laporan.toLowerCase().includes("tes laporan")) return;
-
-        isiTanggal += `
-          <li>
-            <pre>${item.laporan}</pre>
-            <small>Shift: ${item.shift || "-"} | ${item.waktu}</small><br>
-            <button id="hapusBtn" onclick="hapusLaporan('${tanggal}','${key}')">Hapus</button>
-          </li>`;
+        if (isiTanggal) {
+          const li = document.createElement("li");
+          li.innerHTML = `<b>${tanggal}</b><ul>${isiTanggal}</ul>`;
+          list.appendChild(li);
+        }
       });
 
-      if (isiTanggal) {
-        const liTanggal = document.createElement("li");
-        liTanggal.innerHTML = `<b>${tanggal}</b><ul>${isiTanggal}</ul>`;
-        list.appendChild(liTanggal);
+      if (!adaYangTampil) {
+        list.innerHTML = "<li>Tidak ada laporan sesuai filter.</li>";
       }
-    });
-  }
-</script>
+    }
 
+    // small helper: escape HTML agar aman saat menampilkan laporan
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // inisialisasi: sinkronkan input shift saat halaman dimuat
+    document.addEventListener("DOMContentLoaded", () => {
+      updateShiftInput();
+    });
+  </script>
 </body>
 </html>
