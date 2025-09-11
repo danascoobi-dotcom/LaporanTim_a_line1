@@ -14,7 +14,7 @@
     #generateBtn { background: #28a745; }
     #waBtn { background: #25d366; }
     #copyBtn { background: #007bff; }
-    .hapusBtn { background: #dc3545; color: #fff; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-top: 5px; }
+    #hapusBtn { background: #dc3545; }
     pre {
       background: #fff; padding: 12px; border-radius: 5px; border: 1px solid #ccc;
       white-space: pre-wrap; font-family: monospace;
@@ -90,11 +90,6 @@
 <button id="copyBtn" onclick="salinLaporan()">Salin Laporan</button>
 
 <hr>
-
-<h3>🔑 Login Admin</h3>
-<input type="password" id="pwd" placeholder="Masukkan password admin">
-<button onclick="loginAdmin()">Login</button>
-
 <div id="listLaporan" style="margin-top:20px; padding:10px; background:#fff; border-radius:8px;">
   <h3>📋 Data Laporan Realtime</h3>
 
@@ -114,6 +109,8 @@
 
 <script>
 function g(id) { return document.getElementById(id).value.trim(); }
+function n(id) { return parseInt(g(id)) || 0; }
+
 function showNotif(pesan, sukses = true) {
   const notif = document.getElementById("notif");
   notif.textContent = pesan;
@@ -121,12 +118,19 @@ function showNotif(pesan, sukses = true) {
   notif.style.display = "block";
   setTimeout(() => notif.style.display = "none", 3000);
 }
+
 function updateShiftInput() {
   const select = document.getElementById("shiftSelect");
   const input = document.getElementById("shift");
-  if (select.value === "lain") { input.style.display = "block"; input.value = ""; }
-  else { input.style.display = "none"; input.value = select.value; }
+  if (select.value === "lain") {
+    input.style.display = "block";
+    input.value = "";
+  } else {
+    input.style.display = "none";
+    input.value = select.value;
+  }
 }
+
 function kirimWhatsApp() {
   const isi = document.getElementById("output").textContent;
   if (isi) {
@@ -134,10 +138,13 @@ function kirimWhatsApp() {
     window.open(url, "_blank");
   }
 }
+
 function salinLaporan() {
   const isi = document.getElementById("output").textContent;
   if (isi) {
-    navigator.clipboard.writeText(isi).then(() => showNotif("📋 Laporan disalin ke clipboard", true));
+    navigator.clipboard.writeText(isi).then(() => {
+      showNotif("📋 Laporan disalin ke clipboard", true);
+    });
   }
 }
 </script>
@@ -162,13 +169,13 @@ function salinLaporan() {
   const db = getDatabase(app);
 
   let semuaData = {};
-  let isAdmin = false;
 
   window.generate = function() {
     const shift = g("shift") || "-";
     let hasil = `LAPORAN SHIFT ${shift}\n`;
     if (g("tanggal")) hasil += `Tanggal: ${g("tanggal")}\n`;
     if (g("produk")) hasil += `Produk: ${g("produk")}\n\n`;
+
     hasil += "GRINDING\n";
     if (g("psa")) hasil += `- PSA: ${g("psa")}\n`;
     if (g("mesh")) hasil += `- Mesh: ${g("mesh")}\n`;
@@ -177,6 +184,7 @@ function salinLaporan() {
     if (g("silo_a")) hasil += `- Silo A: ${g("silo_a")}\n`;
     if (g("silo_b")) hasil += `- Silo B: ${g("silo_b")}\n`;
     if (g("catatan_grinding")) hasil += g("catatan_grinding") + "\n\n";
+
     hasil += "PREPARATION\n";
     if (g("pulp203")) hasil += `- Pulp 203: ${g("pulp203")}\n`;
     if (g("pulp204")) hasil += `- Pulp 204: ${g("pulp204")}\n`;
@@ -188,13 +196,16 @@ function salinLaporan() {
     if (g("kalsium")) hasil += `- Kalsium: ${g("kalsium")}\n`;
     if (g("recycle")) hasil += `- Recycle: ${g("recycle")}\n`;
     if (g("catatan_preparation")) hasil += g("catatan_preparation") + "\n\n";
+
     hasil += "FINISH GOOD\n";
     if (g("mr")) hasil += `- Mother Roll: ${g("mr")}\n`;
     if (g("fg_berat")) hasil += `- Berat: ${g("fg_berat")} kg\n`;
     if (g("catatan_finish")) hasil += g("catatan_finish") + "\n\n";
+
     hasil += "CYLINDER\n";
     if (g("pisau")) hasil += `- Pisau: ${g("pisau")}\n`;
     if (g("catatan_cylinder")) hasil += g("catatan_cylinder") + "\n\n";
+
     hasil += "SLITTING\n";
     if (g("slit_mr")) hasil += `- MR dipotong: ${g("slit_mr")}\n`;
     if (g("reject_produksi")) hasil += `- Reject Produksi: ${g("reject_produksi")}\n`;
@@ -207,9 +218,13 @@ function salinLaporan() {
     const tanggal = g("tanggal") || "tanpa_tanggal";
     const laporanRef = ref(db, "laporan/" + tanggal);
     const newLaporan = push(laporanRef);
-    set(newLaporan, { shift, laporan: hasil, waktu: new Date().toISOString() })
-      .then(() => showNotif("✅ Laporan berhasil disimpan!", true))
-      .catch(() => showNotif("❌ Gagal menyimpan laporan!", false));
+    set(newLaporan, {
+      shift: shift,
+      laporan: hasil,
+      waktu: new Date().toISOString()
+    })
+    .then(() => showNotif("✅ Laporan berhasil disimpan!", true))
+    .catch(() => showNotif("❌ Gagal menyimpan laporan!", false));
   };
 
   const laporanRef = ref(db, "laporan");
@@ -218,7 +233,15 @@ function salinLaporan() {
     renderLaporan();
   });
 
-  window.tampilkanLaporan = function() { renderLaporan(); };
+  window.tampilkanLaporan = function() {
+    renderLaporan();
+  };
+
+  window.hapusLaporan = function(tanggal, key) {
+    if (confirm("Yakin mau hapus laporan ini?")) {
+      remove(ref(db, "laporan/" + tanggal + "/" + key));
+    }
+  };
 
   function renderLaporan() {
     const filterTanggal = document.getElementById("filterTanggal").value;
@@ -236,13 +259,18 @@ function salinLaporan() {
       const perTanggal = semuaData[tanggal];
 
       let isiTanggal = "";
-      Object.entries(perTanggal).forEach(([id, item]) => {
+      Object.keys(perTanggal).forEach(key => {
+        const item = perTanggal[key];
         if (filterShift && item.shift !== filterShift) return;
+
+        // 🚫 skip laporan test
+        if (!item.laporan || item.laporan.toLowerCase().includes("tes laporan")) return;
+
         isiTanggal += `
           <li>
             <pre>${item.laporan}</pre>
-            <small>Shift: ${item.shift || "-"} | ${item.waktu}</small>
-            ${isAdmin ? `<button class="hapusBtn" onclick="hapusLaporan('${tanggal}','${id}')">Hapus</button>` : ""}
+            <small>Shift: ${item.shift || "-"} | ${item.waktu}</small><br>
+            <button id="hapusBtn" onclick="hapusLaporan('${tanggal}','${key}')">Hapus</button>
           </li>`;
       });
 
@@ -253,24 +281,6 @@ function salinLaporan() {
       }
     });
   }
-
-  // 🔑 Login admin
-  window.loginAdmin = function() {
-    const pwd = document.getElementById("pwd").value;
-    if (pwd === "1234") {
-      isAdmin = true;
-      alert("✅ Login berhasil sebagai admin");
-      renderLaporan();
-    } else {
-      alert("❌ Password salah");
-    }
-  };
-
-  // 🗑️ Hapus laporan
-  window.hapusLaporan = function(tanggal, id) {
-    if (!isAdmin) return alert("Login admin dulu");
-    remove(ref(db, "laporan/" + tanggal + "/" + id));
-  };
 </script>
 
 </body>
