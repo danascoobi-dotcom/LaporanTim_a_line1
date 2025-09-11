@@ -175,37 +175,46 @@ function salinLaporan() {
     if (g("tanggal")) hasil += `Tanggal: ${g("tanggal")}\n`;
     if (g("produk")) hasil += `Produk: ${g("produk")}\n\n`;
 
-    hasil += "GRINDING\n";
-    if (g("psa")) hasil += `- PSA: ${g("psa")}\n`;
-    if (g("mesh")) hasil += `- Mesh: ${g("mesh")}\n`;
-    if (g("mix_a")) hasil += `- Mix A: ${g("mix_a")}\n`;
-    if (g("mix_b")) hasil += `- Mix B: ${g("mix_b")}\n`;
-    if (g("silo_a")) hasil += `- Silo A: ${g("silo_a")}\n`;
-    if (g("silo_b")) hasil += `- Silo B: ${g("silo_b")}\n`;
-    if (g("catatan_grinding")) hasil += g("catatan_grinding") + "\n\n";
+    // GRINDING
+    let grinding = "";
+    if (g("psa")) grinding += `- PSA: ${g("psa")} µm\n`;
+    if (g("mesh")) grinding += `- Mesh: ${g("mesh")} mesh\n`;
+    if (g("mix_a")) grinding += `- Mix A: ${g("mix_a")}\n`;
+    if (g("mix_b")) grinding += `- Mix B: ${g("mix_b")}\n`;
+    if (g("silo_a")) grinding += `- Silo A: ${g("silo_a")}\n`;
+    if (g("silo_b")) grinding += `- Silo B: ${g("silo_b")}\n`;
+    if (g("catatan_grinding")) grinding += g("catatan_grinding") + "\n";
+    if (grinding) hasil += "GRINDING\n" + grinding + "\n";
 
-    hasil += "PREPARATION\n";
-    if (g("pulp203")) hasil += `- Pulp 203: ${g("pulp203")}\n`;
-    if (g("pulp204")) hasil += `- Pulp 204: ${g("pulp204")}\n`;
-    if (g("pulp205")) hasil += `- Pulp 205: ${g("pulp205")}\n`;
-    if (g("adhesive_standby")) hasil += `- Adhesive Standby: ${g("adhesive_standby")}\n`;
-    if (g("adhesive_sisa")) hasil += `- Adhesive Sisa: ${g("adhesive_sisa")}\n`;
-    if (g("flavor_standby")) hasil += `- Flavor Standby: ${g("flavor_standby")}\n`;
-    if (g("flavor_sisa")) hasil += `- Flavor Sisa: ${g("flavor_sisa")}\n`;
-    if (g("kalsium")) hasil += `- Kalsium: ${g("kalsium")}\n`;
-    if (g("recycle")) hasil += `- Recycle: ${g("recycle")}\n`;
-    if (g("catatan_preparation")) hasil += g("catatan_preparation") + "\n\n";
+    // PREPARATION
+    let prep = "";
+    if (g("pulp203")) prep += `- Pulp 203: ${g("pulp203")}\n`;
+    if (g("pulp204")) prep += `- Pulp 204: ${g("pulp204")}\n`;
+    if (g("pulp205")) prep += `- Pulp 205: ${g("pulp205")}\n`;
+    if (g("adhesive_standby")) prep += `- Adhesive Standby: ${g("adhesive_standby")}\n`;
+    if (g("adhesive_sisa")) prep += `- Adhesive Sisa: ${g("adhesive_sisa")}\n`;
+    if (g("flavor_standby")) prep += `- Flavor Standby: ${g("flavor_standby")}\n`;
+    if (g("flavor_sisa")) prep += `- Flavor Sisa: ${g("flavor_sisa")}\n`;
+    if (g("kalsium")) prep += `- Kalsium: ${g("kalsium")}\n`;
+    if (g("recycle")) prep += `- Recycle: ${g("recycle")}\n`;
+    if (g("catatan_preparation")) prep += g("catatan_preparation") + "\n";
+    if (prep) hasil += "PREPARATION\n" + prep + "\n";
 
-    hasil += "FINISH GOOD\n";
-    if (g("mr")) hasil += `- Mother Roll: ${g("mr")}\n`;
-    if (g("fg_berat")) hasil += `- Berat: ${g("fg_berat")} kg\n`;
-    if (g("catatan_finish")) hasil += g("catatan_finish") + "\n\n";
+    // FINISH GOOD
+    let finish = "";
+    if (g("mr")) finish += `- Mother Roll: ${g("mr")}\n`;
+    if (g("fg_berat")) finish += `- Berat: ${g("fg_berat")} kg\n`;
+    if (g("catatan_finish")) finish += g("catatan_finish") + "\n";
+    if (finish) hasil += "FINISH GOOD\n" + finish + "\n";
 
-    hasil += "CYLINDER\n";
-    if (g("pisau")) hasil += `- Pisau: ${g("pisau")}\n`;
-    if (g("catatan_cylinder")) hasil += g("catatan_cylinder") + "\n\n";
+    // CYLINDER
+    let cyl = "";
+    if (g("pisau")) cyl += `- Pisau: ${g("pisau")}\n`;
+    if (g("catatan_cylinder")) cyl += g("catatan_cylinder") + "\n";
+    if (cyl) hasil += "CYLINDER\n" + cyl + "\n";
 
-    hasil += "SLITTING\n";
+    // SLITTING
+    let slit = "";
     if (g("slit_mr")) {
       const mr = parseFloat(g("slit_mr")) || 0;
       const rejectProduksi = parseFloat(g("reject_produksi")) || 0;
@@ -213,16 +222,17 @@ function salinLaporan() {
 
       const totalBobin = mr * 10;
       const totalKg = totalBobin * 15;
-      hasil += `- MR dipotong: ${mr} MR → ${totalBobin} bobin → ${totalKg} kg\n`;
+      slit += `- MR dipotong: ${mr} MR → ${totalBobin} bobin → ${totalKg} kg\n`;
 
-      if (rejectProduksi > 0) hasil += `- Reject Produksi: ${rejectProduksi} bobin\n`;
-      if (rejectNCP > 0) hasil += `- Reject NCP: ${rejectNCP} bobin\n`;
+      if (rejectProduksi > 0) slit += `- Reject Produksi: ${rejectProduksi} bobin\n`;
+      if (rejectNCP > 0) slit += `- Reject NCP: ${rejectNCP} bobin\n`;
 
       const totalBobinOke = totalBobin - (rejectProduksi + rejectNCP);
       const totalKgOke = totalBobinOke * 15;
-      hasil += `- Total Bobin Oke: ${totalBobinOke} bobin → ${totalKgOke} kg\n`;
+      slit += `- Total Bobin Oke: ${totalBobinOke} bobin → ${totalKgOke} kg\n`;
     }
-    if (g("catatan_slitting")) hasil += g("catatan_slitting") + "\n";
+    if (g("catatan_slitting")) slit += g("catatan_slitting") + "\n";
+    if (slit) hasil += "SLITTING\n" + slit + "\n";
 
     document.getElementById("output").textContent = hasil;
 
