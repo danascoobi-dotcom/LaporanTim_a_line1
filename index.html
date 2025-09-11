@@ -80,7 +80,6 @@
 <input type="number" id="slit_mr" placeholder="Jumlah MR yang dipotong">
 <input type="number" id="reject_produksi" placeholder="Bobin Reject Produksi">
 <input type="number" id="reject_ncp" placeholder="Bobin Reject NCP">
-<input type="number" id="total_bobin_manual" placeholder="Total Bobin Manual">
 <textarea id="catatan_slitting" placeholder="Catatan Slitting..."></textarea>
 
 <button id="generateBtn" onclick="generate()">Tampilkan Laporan (Auto Save)</button>
@@ -170,18 +169,8 @@ function salinLaporan() {
 
   let semuaData = {};
 
-  // Set default filter tanggal ke hari ini
-  document.addEventListener("DOMContentLoaded", () => {
-    const today = new Date().toISOString().split("T")[0];
-    document.getElementById("filterTanggal").value = today;
-  });
-
   window.generate = function() {
-    let shift = g("shift") || "-";
-    if (shift.startsWith("Shift ")) {
-      shift = shift.replace("Shift ", "");
-    }
-
+    const shift = g("shift") || "-";
     let hasil = `LAPORAN SHIFT ${shift}\n`;
     if (g("tanggal")) hasil += `Tanggal: ${g("tanggal")}\n`;
     if (g("produk")) hasil += `Produk: ${g("produk")}\n\n`;
@@ -217,15 +206,27 @@ function salinLaporan() {
     if (g("catatan_cylinder")) hasil += g("catatan_cylinder") + "\n\n";
 
     hasil += "SLITTING\n";
-    if (g("slit_mr")) hasil += `- MR dipotong: ${g("slit_mr")}\n`;
-    if (g("reject_produksi")) hasil += `- Reject Produksi: ${g("reject_produksi")}\n`;
-    if (g("reject_ncp")) hasil += `- Reject NCP: ${g("reject_ncp")}\n`;
-    if (g("total_bobin_manual")) hasil += `- Total Bobin Manual: ${g("total_bobin_manual")}\n`;
+    if (g("slit_mr")) {
+      const mr = parseFloat(g("slit_mr")) || 0;
+      const rejectProduksi = parseFloat(g("reject_produksi")) || 0;
+      const rejectNCP = parseFloat(g("reject_ncp")) || 0;
+
+      const totalBobin = mr * 10;
+      const totalKg = totalBobin * 15;
+      hasil += `- MR dipotong: ${mr} MR → ${totalBobin} bobin → ${totalKg} kg\n`;
+
+      if (rejectProduksi > 0) hasil += `- Reject Produksi: ${rejectProduksi} bobin\n`;
+      if (rejectNCP > 0) hasil += `- Reject NCP: ${rejectNCP} bobin\n`;
+
+      const totalBobinOke = totalBobin - (rejectProduksi + rejectNCP);
+      const totalKgOke = totalBobinOke * 15;
+      hasil += `- Total Bobin Oke: ${totalBobinOke} bobin → ${totalKgOke} kg\n`;
+    }
     if (g("catatan_slitting")) hasil += g("catatan_slitting") + "\n";
 
     document.getElementById("output").textContent = hasil;
 
-    const tanggal = g("tanggal") || new Date().toISOString().split("T")[0];
+    const tanggal = g("tanggal") || new Date().toISOString().slice(0,10);
     const laporanRef = ref(db, "laporan/" + tanggal);
     const newLaporan = push(laporanRef);
     set(newLaporan, {
@@ -248,19 +249,15 @@ function salinLaporan() {
   };
 
   window.hapusLaporan = function(tanggal, key) {
-    const username = prompt("Masukkan username untuk hapus:");
-    const password = prompt("Masukkan password untuk hapus:");
-    
-    if (username !== "Tirta" || password !== "Komunitas") {
-      alert("❌ Username atau password salah. Tidak bisa menghapus.");
-      return;
+    const username = prompt("Masukkan Username:");
+    const password = prompt("Masukkan Password:");
+    if (username === "Tirta" && password === "Komunitas") {
+      if (confirm("Yakin mau hapus laporan ini?")) {
+        remove(ref(db, "laporan/" + tanggal + "/" + key));
+      }
+    } else {
+      alert("❌ Username atau Password salah!");
     }
-
-    if (!confirm("Yakin mau hapus laporan ini?")) return;
-
-    remove(ref(db, "laporan/" + tanggal + "/" + key))
-      .then(() => showNotif("🗑️ Laporan berhasil dihapus", true))
-      .catch(() => showNotif("❌ Gagal menghapus laporan!", false));
   };
 
   function renderLaporan() {
@@ -282,7 +279,6 @@ function salinLaporan() {
       Object.keys(perTanggal).forEach(key => {
         const item = perTanggal[key];
         if (filterShift && item.shift !== filterShift) return;
-
         if (!item.laporan || item.laporan.toLowerCase().includes("tes laporan")) return;
 
         isiTanggal += `
