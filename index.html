@@ -218,8 +218,8 @@ function salinLaporan() {
     const laporanRef = ref(db, "laporan/" + tanggal);
     const newLaporan = push(laporanRef);
     set(newLaporan, {
-      shift: shift,
-      laporan: hasil,
+      shift: shift || "-",
+      laporan: hasil || "-",
       waktu: new Date().toISOString()
     })
     .then(() => showNotif("✅ Laporan berhasil disimpan!", true))
@@ -253,6 +253,7 @@ function salinLaporan() {
 
       let isiTanggal = "";
       Object.values(perTanggal).forEach(item => {
+        if (!item.laporan) return; // skip kosong/undefined
         if (filterShift && item.shift !== filterShift) return;
         isiTanggal += `
           <li>
